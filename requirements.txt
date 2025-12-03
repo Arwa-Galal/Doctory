@@ -8,3 +8,9 @@ numpy
 pandas
 pillow
 scikit-learn
+xgboost
+lightgbm
+catboost
+onnxruntime
+google-cloud-aiplatform
+vertexai
