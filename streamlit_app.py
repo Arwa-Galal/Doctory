@@ -1,112 +1,144 @@
 import streamlit as st
-from utils import MODELS # Import global MODELS dictionary
-import vertexai
-from vertexai.generative_models import GenerativeModel
-from google.cloud.exceptions import NotFound
+import google.generativeai as genai
+import joblib
+import numpy as np
+import os
+from PIL import Image
 
-if MODELS is None: st.stop()
+# --- 1. CONFIGURATION (SETUP) ---
+st.set_page_config(
+    page_title="Doctory AI",
+    page_icon="🩺",
+    layout="wide"
+)
 
-# --- Page Logic ---
-st.header("AI Medical Assistant (MedBot) 💬")
-st.markdown("Connect to your custom fine-tuned model (Gemma/Gemini) for conversational medical information.")
+# *** PUT YOUR GOOGLE API KEY HERE ***
+# Replace the text inside quotes with your actual key starting with AIza...
+GOOGE_API_KEY = "YOUR_API_KEY_HERE"
 
-# --- Configuration Section for the LLM ---
-with st.expander("⚙️ Configure LLM Connection", expanded=False):
-    st.caption("These credentials link to your custom model hosted on Google Cloud Vertex AI. Requires prior authentication (`gcloud auth...`).")
-    
-    PROJECT_ID = st.text_input("GCP Project ID", value="gen-lang-client-0728569688")
-    REGION = st.text_input("GCP Region", value="https://console.cloud.google.com/vertex-ai/dashboard?cloudshell=true&project=gen-lang-client-0728569688")
-    TUNED_MODEL_NAME = st.text_input("Tuned Model Name (Full Resource Path)", value="models\medical_chatbot_notebook_py.ipynb")
-    
-    st.session_state['llm_config'] = {
-        'PROJECT_ID': PROJECT_ID,
-        'REGION': REGION,
-        'TUNED_MODEL_NAME': TUNED_MODEL_NAME
-    }
+# Configure Gemini
+try:
+    genai.configure(api_key=GOOGE_API_KEY)
+    model_ai = genai.GenerativeModel('gemini-pro')
+except Exception as e:
+    st.error(f"API Key Error: {e}")
 
-    if st.button("Initialize MedBot"):
-        # Clear state to force re-initialization
-        if "tuned_model" in st.session_state: del st.session_state["tuned_model"]
-        if "messages" in st.session_state: del st.session_state["messages"]
-        st.rerun()
+# --- 2. LOAD MODELS (With Error Handling) ---
+@st.cache_resource
+def load_models():
+    models = {}
+    try:
+        # Load Diabetes Model (Adjust path if needed)
+        # Note: We import xgboost globally so joblib can find it
+        import xgboost
+        models['diabetes'] = joblib.load('models/diabetes_model_package/diabetes_ensemble_model.joblib')
+        # models['heart'] = joblib.load('models/HeartRisk_model_package/HeartRisk_model.joblib')
+    except Exception as e:
+        print(f"Model loading warning: {e}")
+    return models
 
-# --- System Prompt Definition (guides the model's behavior) ---
-medical_system_prompt = """
-You are "MedBot," an AI assistant designed to provide helpful, general-purpose medical information. 
-Your persona is professional, empathetic, and clear.
+loaded_models = load_models()
 
-**Your core responsibilities are:**
-1.  **Answer Clearly:** Provide accurate, easy-to-understand explanations for medical questions based on your specialized training data.
-2.  **Be Informative, Not Diagnostic:** You can explain what conditions are, what symptoms are, and describe general treatment options. You MUST NOT diagnose, provide treatment plans, or interpret personal medical results.
-3.  **Prioritize Safety:** If a user's query sounds like a medical emergency (e.g., "chest pain," "difficulty breathing," "severe bleeding"), your *first and only* response should be to advise them to seek immediate emergency medical help.
+# --- 3. SIDEBAR (NAVIGATION) ---
+with st.sidebar:
+    st.title("🩺 Doctory Menu")
+    choice = st.radio(
+        "Choose an action:", 
+        ["💬 Chat with AI Doctor", "🩸 Diabetes Test", "🫁 Pneumonia Check", "🦠 Malaria Check"]
+    )
+    st.markdown("---")
+    st.info("This is an AI Assistant. Please consult a real doctor for medical decisions.")
 
-**CRITICAL SAFETY RULE:**
-You MUST conclude every single response (except for emergency deflections) with the following disclaimer, formatted exactly like this:
+# --- 4. MAIN PAGES ---
 
----
-*Disclaimer: I am an AI assistant and not a medical professional. This information is for educational purposes only. Please consult a qualified healthcare provider for medical advice, diagnosis, or treatment.*
-"""
+# === PAGE 1: CHATBOT (The User wants this first) ===
+if choice == "💬 Chat with AI Doctor":
+    st.title("💬 Chat with Dr. AI")
+    st.caption("Ask me anything about your symptoms or health...")
 
-# --- Initialize Model and Chat History ---
+    # Initialize chat history if empty
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = [{"role": "assistant", "content": "Hello! I am Doctory. How can I help you today?"}]
 
-if "tuned_model" not in st.session_state:
-    st.session_state["tuned_model"] = None
-    
-    config = st.session_state.get('llm_config', {})
-    if config and config['TUNED_MODEL_NAME'] and config['TUNED_MODEL_NAME'] != "projects/.../models/...":
-        with st.spinner("Attempting to load custom model from Vertex AI..."):
-            try:
-                # 1. Initialize Vertex AI environment
-                vertexai.init(project=config['PROJECT_ID'], location=config['REGION'])
-                
-                # 2. Load the specific model with the system instruction
-                tuned_model = GenerativeModel(
-                    config['TUNED_MODEL_NAME'],
-                    system_instruction=[medical_system_prompt]
-                )
-                st.session_state["tuned_model"] = tuned_model
-                st.session_state["messages"] = [{"role": "assistant", "content": "Hello! I am MedBot, your specialized medical assistant. How can I help you today?"}]
-                st.success("MedBot initialized successfully!")
-            
-            except NotFound:
-                st.error("Error: Model not found. Check the Model Name and Project/Region.")
-            except Exception as e:
-                st.error(f"Error connecting to Vertex AI: {e}. Please ensure you are authenticated (`gcloud auth...`).")
-    else:
-         st.info("Please enter your GCP details and click 'Initialize MedBot' to start the chat.")
+    # Display chat messages
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
 
-
-# --- Display Chat History ---
-
-if "messages" in st.session_state:
-    for message in st.session_state["messages"]:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-# --- Handle User Input ---
-
-if st.session_state["tuned_model"] is not None:
-    if prompt := st.chat_input("Ask a medical question..."):
-        
-        # Add user message to chat history
-        st.session_state["messages"].append({"role": "user", "content": prompt})
+    # Chat Input
+    if prompt := st.chat_input("Type your symptoms here..."):
+        # 1. Add user message to history
+        st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
-            st.markdown(prompt)
+            st.write(prompt)
 
-        # Get response from the LLM
+        # 2. Get AI Response
         with st.chat_message("assistant"):
-            with st.spinner("MedBot is thinking..."):
+            with st.spinner("Thinking..."):
                 try:
-                    # Generate content using the loaded model
-                    response = st.session_state["tuned_model"].generate_content([prompt])
-                    
-                    # Display the response
-                    st.markdown(response.text)
-                    
-                    # Add assistant response to chat history
-                    st.session_state["messages"].append({"role": "assistant", "content": response.text})
-                    
+                    # Context for the AI to act like a doctor
+                    full_prompt = f"Act as a professional and empathetic doctor. Answer this patient query: {prompt}"
+                    response = model_ai.generate_content(full_prompt)
+                    ai_text = response.text
+                    st.write(ai_text)
+                    # 3. Add AI response to history
+                    st.session_state.messages.append({"role": "assistant", "content": ai_text})
                 except Exception as e:
-                    error_message = f"An error occurred during generation: {e}"
-                    st.error(error_message)
-                    st.session_state["messages"].append({"role": "assistant", "content": error_message})
+                    st.error("Connection Error. Please check your API Key.")
+
+# === PAGE 2: DIABETES TEST ===
+elif choice == "🩸 Diabetes Test":
+    st.title("🩸 Diabetes Risk Assessment")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        age = st.number_input("Age", 1, 120, 30)
+        pregnancies = st.number_input("Pregnancies", 0, 20, 0)
+        glucose = st.number_input("Glucose Level", 0, 300, 100)
+    with col2:
+        bp = st.number_input("Blood Pressure", 0, 200, 70)
+        skin = st.number_input("Skin Thickness", 0, 100, 20)
+        insulin = st.number_input("Insulin", 0, 900, 79)
+    with col3:
+        bmi = st.number_input("BMI", 0.0, 70.0, 25.0)
+        dpf = st.number_input("Diabetes Pedigree Function", 0.0, 3.0, 0.5)
+
+    if st.button("Analyze Result"):
+        if 'diabetes' in loaded_models:
+            # Prepare data
+            input_data = np.array([[pregnancies, glucose, bp, skin, insulin, bmi, dpf, age]])
+            
+            try:
+                prediction = loaded_models['diabetes'].predict(input_data)[0]
+                
+                # Get Explanation from AI
+                result_str = "Diabetic" if prediction == 1 else "Healthy"
+                prompt_analysis = f"Patient Data: Glucose {glucose}, BMI {bmi}, Age {age}. Model Result: {result_str}. Explain this briefly to the patient."
+                explanation = model_ai.generate_content(prompt_analysis).text
+
+                st.success(f"Prediction: **{result_str}**")
+                st.info(f"👨‍⚕️ Dr. AI Note: {explanation}")
+                
+            except Exception as e:
+                st.error(f"Calculation Error: {e}")
+        else:
+            st.warning("Diabetes model file not found in 'models/diabetes_model_package/'. Please check file path.")
+
+# === PAGE 3: PNEUMONIA CHECK ===
+elif choice == "🫁 Pneumonia Check":
+    st.title("🫁 Pneumonia X-Ray Check")
+    uploaded_file = st.file_uploader("Upload Chest X-Ray", type=["jpg", "png", "jpeg"])
+    
+    if uploaded_file:
+        st.image(uploaded_file, width=300)
+        if st.button("Check Image"):
+            st.info("To enable Image Analysis, you need to ensure the ONNX model is loaded correctly.")
+            # Code for ONNX image processing goes here.
+            # For now, let's ask the AI what it thinks generally (Simulator)
+            st.write("Processing image...")
+
+# === PAGE 4: MALARIA CHECK ===
+elif choice == "🦠 Malaria Check":
+    st.title("🦠 Malaria Cell Check")
+    st.write("Upload cell image here...")
+    # Add malaria upload logic here
