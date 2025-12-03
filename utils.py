@@ -18,7 +18,7 @@ import os
 st.set_page_config(page_title="Doctory", page_icon="🩺", layout="centered")
 
 # 2. إعداد Gemini (حطي مفتاحك هنا)
-genai.configure(api_key="YOUR_API_KEY_HERE")
+genai.configure(api_key="AIzaSyAg-7Wu_mCF-z9P-KEbkjpQEb7B3PB_hxo")
 model_ai = genai.GenerativeModel('gemini-pro')
 
 # 3. كود CSS عشان الشكل يبقى حلو (بلاش نغير الـ Layout، هنغير الألوان بس)
