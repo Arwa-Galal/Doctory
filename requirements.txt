@@ -2,10 +2,9 @@ streamlit
 streamlit-option-menu
 streamlit-lottie
 google-generativeai
-scikit-learn
+requests
 joblib
 numpy
 pandas
 pillow
-requests
-onnxruntime
+scikit-learn
