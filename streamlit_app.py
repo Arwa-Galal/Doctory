@@ -14,7 +14,7 @@ st.set_page_config(
 
 # *** PUT YOUR GOOGLE API KEY HERE ***
 # Replace the text inside quotes with your actual key starting with AIza...
-GOOGE_API_KEY = "YOUR_API_KEY_HERE"
+GOOGE_API_KEY = "AIzaSyAg-7Wu_mCF-z9P-KEbkjpQEb7B3PB_hxo"
 
 # Configure Gemini
 try:
