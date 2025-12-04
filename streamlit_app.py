@@ -7,22 +7,21 @@ from PIL import Image
 
 # --- 1. إعداد الصفحة ---
 st.set_page_config(
-    page_title="Doctory AI",
+    page_title="طبيبي الذكي",
     page_icon="🩺",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# --- 2. إعداد مفتاح جوجل ---
-# ضعي مفتاحك هنا (تأكدي أنه يبدأ بـ AIza)
+# --- 2. مفتاح جوجل (ضعي مفتاحك هنا) ---
+# تأكدي أن المفتاح يبدأ بـ AIza
 GOOGE_API_KEY = "AIzaSyCGlprvtIdX7vTQCPBGi7dv4FcQ4usEpdI" 
 
-# إعداد الاتصال بـ Gemini
+# إعداد الاتصال
 try:
     genai.configure(api_key=GOOGE_API_KEY)
-    
-    # === التعديل هنا: استخدمنا الاسم الجديد للموديل ===
-    model_ai = genai.GenerativeModel('gemini-1.5-flash')
-    
+    # سنستخدم gemini-pro لأنه الأكثر استقراراً حالياً
+    model_ai = genai.GenerativeModel('gemini-pro')
 except Exception as e:
     st.error(f"خطأ في إعداد المفتاح: {e}")
 
@@ -31,61 +30,62 @@ except Exception as e:
 def load_models():
     models = {}
     try:
-        import xgboost # استدعاء المكتبة عشان joblib يشوفها
-        # تأكدي من مسار الملف عندك
+        import xgboost
+        # تأكدي أن مسار الملف صحيح لديك في GitHub
         models['diabetes'] = joblib.load('models/diabetes_model_package/diabetes_ensemble_model.joblib')
     except Exception as e:
-        # لو فيه خطأ مش هنوقف الموقع، بس هنطبع تحذير
-        pass 
+        print(f"Error loading models: {e}") 
     return models
 
 loaded_models = load_models()
 
-# --- 4. القائمة الجانبية ---
+# --- 4. القائمة الجانبية (عربي) ---
 with st.sidebar:
-    st.title("🩺 قائمة دكتوري")
+    st.title("🩺 قائمة الخدمات")
     choice = st.radio(
         "اختر الخدمة:", 
-        ["💬 التحدث مع الطبيب الذكي", "🩸 فحص السكري", "🫁 فحص الرئة"]
+        ["💬 التحدث مع الطبيب", "🩸 فحص السكري", "🫁 فحص الرئة"]
     )
     st.markdown("---")
-    st.warning("⚠️ تنبيه: هذا تطبيق مساعد ولا يغني عن الطبيب الحقيقي.")
+    st.warning("⚠️ تنبيه: هذا تطبيق ذكاء اصطناعي للمساعدة فقط ولا يغني عن الطبيب.")
 
-# --- 5. الصفحات ---
+# --- 5. الصفحات (عربي) ---
 
-# === الصفحة 1: الشات (الدكتور الذكي) ===
-if choice == "💬 التحدث مع الطبيب الذكي":
-    st.title("💬 عيادة دكتوري الذكية")
-    st.caption("أنا هنا للإجابة على استفساراتك الطبية العامة...")
+# === الصفحة 1: الشات (الصفحة الرئيسية) ===
+if choice == "💬 التحدث مع الطبيب":
+    st.title("💬 عيادة طبيبي الذكية")
+    st.caption("أهلاً بك.. أنا هنا للإجابة على استفساراتك الطبية العامة.")
 
-    # حفظ المحادثة عشان متتمسحش
+    # تهيئة سجل المحادثة
     if "messages" not in st.session_state:
-        st.session_state["messages"] = [{"role": "assistant", "content": "أهلاً بك! كيف يمكنني مساعدتك صحياً اليوم؟"}]
+        st.session_state["messages"] = [{"role": "assistant", "content": "أهلاً بك. مم تشكو اليوم؟"}]
 
-    # عرض الرسائل القديمة
+    # عرض الرسائل السابقة
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
-    # استقبال سؤال جديد
-    if prompt := st.chat_input("اكتب شكواك أو سؤالك هنا..."):
+    # استقبال الرسالة الجديدة
+    if prompt := st.chat_input("اكتب سؤالك هنا..."):
         # عرض سؤال المستخدم
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.write(prompt)
 
-        # استقبال الرد من Gemini
+        # الرد من الذكاء الاصطناعي
         with st.chat_message("assistant"):
             with st.spinner("جاري التفكير..."):
                 try:
-                    full_prompt = f"تصرف كطبيب محترف ومتعاطف. أجب على هذا السؤال الطبي باختصار وفائدة: {prompt}"
+                    # الأمر الموجه للذكاء الاصطناعي ليتحدث بالعربية
+                    full_prompt = f"تصرف كطبيب محترف. أجب على هذا السؤال باللغة العربية: {prompt}"
                     response = model_ai.generate_content(full_prompt)
                     ai_text = response.text
                     
                     st.write(ai_text)
                     st.session_state.messages.append({"role": "assistant", "content": ai_text})
                 except Exception as e:
-                    st.error(f"حدث خطأ في الاتصال: {e}")
+                    st.error("عذراً، حدث خطأ في الاتصال. تأكد من مفتاح جوجل.")
+                    st.error(f"تفاصيل الخطأ: {e}")
 
 # === الصفحة 2: فحص السكري ===
 elif choice == "🩸 فحص السكري":
@@ -93,37 +93,44 @@ elif choice == "🩸 فحص السكري":
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        age = st.number_input("العمر (Age)", 1, 120, 30)
+        age = st.number_input("العمر", 1, 120, 30)
         pregnancies = st.number_input("عدد مرات الحمل", 0, 20, 0)
-        glucose = st.number_input("مستوى الجلوكوز", 0, 500, 100)
+        glucose = st.number_input("مستوى السكر (Glucose)", 0, 500, 100)
     with col2:
-        bp = st.number_input("ضغط الدم (BP)", 0, 200, 70)
-        skin = st.number_input("سمك الجلد (Skin)", 0, 100, 20)
+        bp = st.number_input("ضغط الدم", 0, 200, 70)
+        skin = st.number_input("سمك الجلد", 0, 100, 20)
         insulin = st.number_input("الأنسولين", 0, 900, 79)
     with col3:
-        bmi = st.number_input("مؤشر الكتلة (BMI)", 0.0, 70.0, 25.0)
+        bmi = st.number_input("مؤشر كتلة الجسم (BMI)", 0.0, 70.0, 25.0)
         dpf = st.number_input("تاريخ العائلة (DPF)", 0.0, 3.0, 0.5)
 
     if st.button("تحليل النتيجة"):
         if 'diabetes' in loaded_models:
-            # تجهيز البيانات
             input_data = np.array([[pregnancies, glucose, bp, skin, insulin, bmi, dpf, age]])
-            
             try:
-                # 1. الموديل يحسب النتيجة
                 prediction = loaded_models['diabetes'].predict(input_data)[0]
-                result_str = "Diabetic (مصاب محتمل)" if prediction == 1 else "Healthy (سليم)"
+                
+                # ترجمة النتيجة
+                result_str = "مصاب محتمل (Diabetic)" if prediction == 1 else "سليم (Healthy)"
                 color = "red" if prediction == 1 else "green"
                 
-                # 2. الـ AI يشرح النتيجة
-                prompt_analysis = f"بيانات المريض: سكر {glucose}، عمر {age}. نتيجة الموديل: {result_str}. اشرح النتيجة للمريض باختصار."
+                # طلب الشرح من الـ AI
+                prompt_analysis = f"مريض سكر (جلوكوز: {glucose})، عمره {age}. نتيجة الموديل تقول: {result_str}. اشرح له النتيجة بالعربية وقدم نصيحة."
                 explanation = model_ai.generate_content(prompt_analysis).text
 
-                # 3. العرض
                 st.markdown(f"### النتيجة: :{color}[{result_str}]")
                 st.info(f"👨‍⚕️ رأي المستشار الطبي: {explanation}")
                 
             except Exception as e:
-                st.error(f"خطأ في الحساب: {e}")
+                st.error(f"حدث خطأ في الحساب: {e}")
         else:
-            st
+            st.error("عذراً، ملف موديل السكري غير موجود في المسار الصحيح.")
+
+# === الصفحة 3: فحص الرئة ===
+elif choice == "🫁 فحص الرئة":
+    st.title("🫁 فحص الأشعة (X-Ray)")
+    uploaded_file = st.file_uploader("ارفع صورة الأشعة هنا", type=["jpg", "png", "jpeg"])
+    
+    if uploaded_file:
+        st.image(uploaded_file, width=300)
+        st.info("الذكاء الاصطناعي جاهز لتحليل الصورة (يحتاج ربط موديل الصور).")
