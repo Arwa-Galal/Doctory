@@ -1,136 +1,114 @@
 import streamlit as st
-import google.generativeai as genai
-import joblib
-import numpy as np
-import os
-from PIL import Image
+import requests
+import json
 
-# --- 1. إعداد الصفحة ---
+# --- Page Configuration ---
 st.set_page_config(
-    page_title="طبيبي الذكي",
+    page_title="MedBot - AI Medical Assistant",
     page_icon="🩺",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="centered"
 )
 
-# --- 2. مفتاح جوجل (ضعي مفتاحك هنا) ---
-# تأكدي أن المفتاح يبدأ بـ AIza
-GOOGE_API_KEY = "AIzaSyCGlprvtIdX7vTQCPBGi7dv4FcQ4usEpdI" 
+# --- Configuration & Sidebar ---
+st.sidebar.title("⚙️ Configuration")
 
-# إعداد الاتصال
-try:
-    genai.configure(api_key=GOOGE_API_KEY)
-    # سنستخدم gemini-pro لأنه الأكثر استقراراً حالياً
-    model_ai = genai.GenerativeModel('gemini-pro')
-except Exception as e:
-    st.error(f"خطأ في إعداد المفتاح: {e}")
+# 1. Get API Key from Sidebar (Safer than hardcoding)
+api_key = st.sidebar.text_input("Enter Google API Key", type="password", help="Get your key from Google AI Studio")
 
-# --- 3. تحميل موديلات الأمراض ---
-@st.cache_resource
-def load_models():
-    models = {}
+# 2. Define the Model URL
+# We use the specific model version from your notebook
+API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={api_key}"
+
+# --- System Prompt (The Brain) ---
+medical_system_prompt = """
+You are "MedBot," an AI assistant designed to provide helpful, general-purpose medical information.
+Your persona is professional, empathetic, and clear.
+
+**Your core responsibilities are:**
+1.  **Answer Clearly:** Provide accurate, easy-to-understand explanations for medical questions.
+2.  **Be Informative, Not Diagnostic:** You can explain what conditions are, what symptoms are, and describe general treatment options. You MUST NOT diagnose, provide treatment plans, or interpret personal medical results.
+3.  **Prioritize Safety:** If a user's query sounds like a medical emergency (e.g., "chest pain," "difficulty breathing," "severe bleeding"), your *first and only* response should be to advise them to seek immediate emergency medical help.
+
+**CRITICAL SAFETY RULE:**
+You MUST conclude every single response (except for emergency deflections) with the following disclaimer, formatted exactly like this:
+
+---
+*Disclaimer: I am an AI assistant and not a medical professional. This information is for educational purposes only. Please consult a qualified healthcare provider for medical advice, diagnosis, or treatment.*
+"""
+
+# --- Helper Function ---
+def ask_medbot(user_query, system_prompt):
+    """
+    Sends a query to the Gemini API via REST requests.
+    """
+    if not api_key:
+        return "⚠️ Error: Please enter your API Key in the sidebar to proceed."
+
+    # Construct the API payload
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": user_query}
+                ]
+            }
+        ],
+        "systemInstruction": {
+            "parts": [
+                {"text": system_prompt}
+            ]
+        }
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
     try:
-        import xgboost
-        # تأكدي أن مسار الملف صحيح لديك في GitHub
-        models['diabetes'] = joblib.load('models/diabetes_model_package/diabetes_ensemble_model.joblib')
-    except Exception as e:
-        print(f"Error loading models: {e}") 
-    return models
+        response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
+        response.raise_for_status() # Check for HTTP errors
+        result = response.json()
 
-loaded_models = load_models()
-
-# --- 4. القائمة الجانبية (عربي) ---
-with st.sidebar:
-    st.title("🩺 قائمة الخدمات")
-    choice = st.radio(
-        "اختر الخدمة:", 
-        ["💬 التحدث مع الطبيب", "🩸 فحص السكري", "🫁 فحص الرئة"]
-    )
-    st.markdown("---")
-    st.warning("⚠️ تنبيه: هذا تطبيق ذكاء اصطناعي للمساعدة فقط ولا يغني عن الطبيب.")
-
-# --- 5. الصفحات (عربي) ---
-
-# === الصفحة 1: الشات (الصفحة الرئيسية) ===
-if choice == "💬 التحدث مع الطبيب":
-    st.title("💬 عيادة طبيبي الذكية")
-    st.caption("أهلاً بك.. أنا هنا للإجابة على استفساراتك الطبية العامة.")
-
-    # تهيئة سجل المحادثة
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = [{"role": "assistant", "content": "أهلاً بك. مم تشكو اليوم؟"}]
-
-    # عرض الرسائل السابقة
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
-
-    # استقبال الرسالة الجديدة
-    if prompt := st.chat_input("اكتب سؤالك هنا..."):
-        # عرض سؤال المستخدم
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.write(prompt)
-
-        # الرد من الذكاء الاصطناعي
-        with st.chat_message("assistant"):
-            with st.spinner("جاري التفكير..."):
-                try:
-                    # الأمر الموجه للذكاء الاصطناعي ليتحدث بالعربية
-                    full_prompt = f"تصرف كطبيب محترف. أجب على هذا السؤال باللغة العربية: {prompt}"
-                    response = model_ai.generate_content(full_prompt)
-                    ai_text = response.text
-                    
-                    st.write(ai_text)
-                    st.session_state.messages.append({"role": "assistant", "content": ai_text})
-                except Exception as e:
-                    st.error("عذراً، حدث خطأ في الاتصال. تأكد من مفتاح جوجل.")
-                    st.error(f"تفاصيل الخطأ: {e}")
-
-# === الصفحة 2: فحص السكري ===
-elif choice == "🩸 فحص السكري":
-    st.title("🩸 تحليل مخاطر السكري")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        age = st.number_input("العمر", 1, 120, 30)
-        pregnancies = st.number_input("عدد مرات الحمل", 0, 20, 0)
-        glucose = st.number_input("مستوى السكر (Glucose)", 0, 500, 100)
-    with col2:
-        bp = st.number_input("ضغط الدم", 0, 200, 70)
-        skin = st.number_input("سمك الجلد", 0, 100, 20)
-        insulin = st.number_input("الأنسولين", 0, 900, 79)
-    with col3:
-        bmi = st.number_input("مؤشر كتلة الجسم (BMI)", 0.0, 70.0, 25.0)
-        dpf = st.number_input("تاريخ العائلة (DPF)", 0.0, 3.0, 0.5)
-
-    if st.button("تحليل النتيجة"):
-        if 'diabetes' in loaded_models:
-            input_data = np.array([[pregnancies, glucose, bp, skin, insulin, bmi, dpf, age]])
-            try:
-                prediction = loaded_models['diabetes'].predict(input_data)[0]
-                
-                # ترجمة النتيجة
-                result_str = "مصاب محتمل (Diabetic)" if prediction == 1 else "سليم (Healthy)"
-                color = "red" if prediction == 1 else "green"
-                
-                # طلب الشرح من الـ AI
-                prompt_analysis = f"مريض سكر (جلوكوز: {glucose})، عمره {age}. نتيجة الموديل تقول: {result_str}. اشرح له النتيجة بالعربية وقدم نصيحة."
-                explanation = model_ai.generate_content(prompt_analysis).text
-
-                st.markdown(f"### النتيجة: :{color}[{result_str}]")
-                st.info(f"👨‍⚕️ رأي المستشار الطبي: {explanation}")
-                
-            except Exception as e:
-                st.error(f"حدث خطأ في الحساب: {e}")
+        # Extract text
+        if "candidates" in result and result["candidates"]:
+            return result["candidates"][0]["content"]["parts"][0]["text"]
         else:
-            st.error("عذراً، ملف موديل السكري غير موجود في المسار الصحيح.")
+            return "Error: No valid response from API."
 
-# === الصفحة 3: فحص الرئة ===
-elif choice == "🫁 فحص الرئة":
-    st.title("🫁 فحص الأشعة (X-Ray)")
-    uploaded_file = st.file_uploader("ارفع صورة الأشعة هنا", type=["jpg", "png", "jpeg"])
+    except requests.exceptions.RequestException as e:
+        return f"Connection Error: {e}"
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+
+# --- Main UI Logic ---
+st.title("🩺 MedBot")
+st.caption("A safety-focused medical AI assistant powered by Gemini")
+
+# Initialize Chat History in Session State
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Hello! I am MedBot. I can answer general medical questions. How can I help you today?"}
+    ]
+
+# Display Chat History
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Capture User Input
+if prompt := st.chat_input("Ask a medical question..."):
+    # 1. Display User Message
+    with st.chat_message("user"):
+        st.markdown(prompt)
     
-    if uploaded_file:
-        st.image(uploaded_file, width=300)
-        st.info("الذكاء الاصطناعي جاهز لتحليل الصورة (يحتاج ربط موديل الصور).")
+    # 2. Add to history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+
+    # 3. Generate Response
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response_text = ask_medbot(prompt, medical_system_prompt)
+            st.markdown(response_text)
+    
+    # 4. Add Assistant Response to history
+    st.session_state.messages.append({"role": "assistant", "content": response_text})
