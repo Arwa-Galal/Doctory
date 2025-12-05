@@ -19,9 +19,9 @@ st.set_page_config(
 st.markdown("""
     <style>
     /* 1. Hide default Streamlit menu and footer */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+   /*#MainMenu {visibility: hidden;}*/
+   /* footer {visibility: hidden;}*/
+   /* header {visibility: hidden;}*/
     
     /* 2. Hide the default sidebar navigation list */
     div[data-testid="stSidebarNav"] {display: none;}
