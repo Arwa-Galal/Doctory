@@ -2,7 +2,7 @@ import streamlit as st
 from PIL import Image
 import io
 import numpy as np
-from utils import MODELS, process_image_yolo 
+from utils import process_image, load_all_models
 
 # --- Custom CSS with Enhanced Styling from HTML ---
 def local_css():
