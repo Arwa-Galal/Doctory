@@ -12,11 +12,11 @@ with col2:
     st.markdown("<h4 style='text-align: center; color: #555;'>Your Intelligent Medical Companion</h4>", unsafe_allow_html=True)
     st.markdown("---")
 
-# --- NAVIGATION ICONS (Down Middle) ---
+# --- NAVIGATION ICONS ---
 st.markdown("<h3 style='text-align: center;'>Choose a Service</h3>", unsafe_allow_html=True)
 st.write("") # Spacer
 
-# Row 1
+# Row 1: Chat, Diabetes, Pneumonia
 c1, c2, c3 = st.columns([1, 1, 1])
 
 with c1:
@@ -25,7 +25,8 @@ with c1:
     st.subheader("AI Doctor")
     st.caption("Chat with our smart assistant.")
     if st.button("Start Chat"):
-        st.switch_page("pages/1_AI_Chatbot.py")
+        # تأكدي أن اسم الملف في فولدر pages هو 1_💬_Chat_With_Doctory.py
+        st.switch_page("pages/1_💬_Chat_With_Doctory.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c2:
@@ -34,7 +35,8 @@ with c2:
     st.subheader("Diabetes")
     st.caption("Check risk based on vitals.")
     if st.button("Check Diabetes"):
-        st.switch_page("pages/4_Diabetes_Risk.py")
+        # تأكدي أن اسم الملف 2_🩸_Diabetes_Test.py
+        st.switch_page("pages/2_🩸_Diabetes_Test.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c3:
@@ -43,33 +45,33 @@ with c3:
     st.subheader("Pneumonia")
     st.caption("Analyze Chest X-Ray images.")
     if st.button("Check Lungs"):
-        st.switch_page("pages/2_Pneumonia_X_Ray.py")
+        # تأكدي أن اسم الملف 3_🫁_Pneumonia_Check.py
+        st.switch_page("pages/3_🫁_Pneumonia_Check.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Row 2 (Added Heart and Malaria)
-c4, c5 = st.columns([1, 1])
+# Row 2: Heart, Malaria (تم الإصلاح هنا)
+c4, c5, c6 = st.columns([1, 1, 1]) # أضفت العمود الثالث الفارغ
 
-# Heart Disease Card (New)
 with c4:
     st.markdown('<div class="css-card">', unsafe_allow_html=True)
-    # Using a heart icon
     st.image("https://cdn-icons-png.flaticon.com/512/833/833472.png", width=60)
     st.subheader("Heart Disease")
     st.caption("Assess cardiovascular risk.")
     if st.button("Check Heart"):
-        st.switch_page("pages/5_Heart_Risk.py")
+        # تأكدي أن اسم الملف 5_❤️_Heart_Risk.py
+        st.switch_page("pages/5_❤️_Heart_Risk.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Malaria Card
 with c5:
     st.markdown('<div class="css-card">', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/883/883407.png", width=60)
     st.subheader("Malaria")
     st.caption("Analyze cell images.")
     if st.button("Check Malaria"):
-        st.switch_page("pages/3_Malaria_Blood_Smear.py")
+        # تأكدي أن اسم الملف 4_🦟_Malaria_Check.py
+        st.switch_page("pages/4_🦟_Malaria_Check.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Empty column to balance the layout (optional)
+# العمود الثالث فارغ للتوازن
 with c6:
     st.write("")
