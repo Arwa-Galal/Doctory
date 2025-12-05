@@ -2,13 +2,28 @@ import streamlit as st
 from PIL import Image
 import io
 import numpy as np
-from utils import process_image, load_all_models
+# We import 'process_image' but rename it to 'process_image_yolo' to match your code logic
+from utils import process_image as process_image_yolo, load_all_models
 
-# --- Custom CSS with Enhanced Styling from HTML ---
-MODELS = load_all_models()
+# --- Page Config ---
+st.set_page_config(
+    page_title="Pneumonia Check",
+    page_icon="🫁",
+    layout="wide"
+)
 
+# --- Navigation ---
 if st.sidebar.button("🏠 Back to Home"):
     st.switch_page("app.py")
+
+# --- Load Models ---
+MODELS = load_all_models()
+
+if MODELS is None:
+    st.error("Model initialization failed. Check your 'models/' folder structure.")
+    st.stop()
+
+# --- Custom CSS (Your Design) ---
 def local_css():
     st.markdown(
         """
@@ -33,14 +48,14 @@ def local_css():
         .hero-section {
             background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%);
             color: white;
-            min-height: 100vh;
+            min-height: 40vh; /* Adjusted height for better fit */
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             position: relative;
             overflow: hidden;
-            margin: -5rem -5rem 0 -5rem;
+            margin-bottom: 2rem;
             padding: 2rem;
         }
 
@@ -68,11 +83,11 @@ def local_css():
 
         .hero-title {
             font-weight: 700;
-            font-size: 4.5rem;
+            font-size: 3.5rem;
             color: white !important;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
             animation: glow 2s infinite alternate;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
         }
 
         @keyframes glow {
@@ -87,7 +102,7 @@ def local_css():
 
         /* Content Section */
         .content-section {
-            padding: 120px 2rem;
+            padding: 20px 2rem;
             max-width: 1200px;
             margin: 0 auto;
         }
@@ -100,7 +115,7 @@ def local_css():
             border-radius: 25px;
             box-shadow: 0 25px 50px rgba(13, 71, 161, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
             padding: 50px;
-            margin-bottom: 80px;
+            margin-bottom: 40px;
             position: relative;
             transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
@@ -130,7 +145,7 @@ def local_css():
         }
 
         h2 {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         /* File Uploader Styling */
@@ -169,22 +184,6 @@ def local_css():
             box-shadow: 0 15px 40px rgba(13, 71, 161, 0.5) !important;
         }
 
-        /* Image Styling */
-        img {
-            border: 4px solid #0d47a1;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(13, 71, 161, 0.3);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
-            max-width: 400px;
-            margin: 0 auto;
-            display: block;
-        }
-
-        img:hover {
-            transform: scale(1.05);
-            box-shadow: 0 20px 50px rgba(13, 71, 161, 0.5);
-        }
-
         /* Result Box Animations */
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(-30px) scale(0.9); }
@@ -203,50 +202,40 @@ def local_css():
             text-align: center;
         }
 
-        /* Spinner */
-        .stSpinner > div {
-            border-color: #0d47a1 !important;
-        }
-
-        /* Info Section */
-        .info-text {
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-
         /* Footer */
         .footer {
             background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
             color: white;
             text-align: center;
-            padding: 50px 0;
-            margin-top: 120px;
+            padding: 30px 0;
+            margin-top: 50px;
         }
 
         .footer p {
             color: white !important;
             margin: 0;
         }
-
-        /* Icon styling */
-        .icon {
-            margin-right: 15px;
-        }
         </style>
         """,
         unsafe_allow_html=True
     )
 
-# Ensure models are loaded before proceeding
-if MODELS is None:
-    st.error("Model initialization failed. Check your 'models/' folder structure.")
-    st.stop()
+# --- Main Logic ---
 
-# Get specific models/names from the global dict
-pneumonia_session = MODELS['pneumonia_session']
-pneumonia_input_name = MODELS['pneumonia_input_name']
-pneumonia_output_name = MODELS['pneumonia_output_name']
-pneumonia_classes = MODELS['pneumonia_classes']
+# Retrieve Model Components from utils.py loaded dictionary
+# Note: We use the keys defined in utils.py. 
+# If you used the shortened keys in utils, change them here (e.g., 'pneumonia_sess').
+# Assuming you used the LONG keys from your previous prompt:
+try:
+    pneumonia_session = MODELS.get('pneumonia_session') or MODELS.get('pneumonia_sess')
+    pneumonia_input_name = MODELS.get('pneumonia_input_name') or MODELS.get('pneu_in')
+    pneumonia_output_name = MODELS.get('pneumonia_output_name') or MODELS.get('pneu_out')
+    
+    # Define classes if not in utils
+    pneumonia_classes = MODELS.get('pneumonia_classes') or ["Normal", "Pneumonia_bacteria", "Pneumonia_virus"]
+except:
+    st.error("Error retrieving model components.")
+    st.stop()
 
 def pneumonia_predictor_page():
     # Apply custom CSS
@@ -280,54 +269,56 @@ def pneumonia_predictor_page():
         with col2:
             st.image(image, use_column_width=True)
 
-        # Spacing
         st.write("")
 
         if st.button("🔍 Analyze X-Ray"):
             with st.spinner('Analyzing image...'):
                 try:
-                    # Preprocessing
+                    # Preprocessing (Using utils function aliased as process_image_yolo)
                     img_np = process_image_yolo(image_bytes, target_size=(224, 224))
                     
                     # Inference
-                    outputs = pneumonia_session.run([pneumonia_output_name], {pneumonia_input_name: img_np})[0]
-                    
-                    probs = outputs[0]
-                    top_index = np.argmax(probs)
-                    confidence = float(probs[top_index])
-                    prediction_label = pneumonia_classes[top_index]
-                    
-                    # Result Display
-                    if prediction_label == "Normal":
-                        st.markdown(
-                            f"""
-                            <div class="result-box" style="background-color: rgba(56, 142, 60, 0.2); border: 1px solid #388e3c; color: #388e3c; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px;">
-                                <h3 style="color: #388e3c !important; margin: 0; font-size: 1.8rem;">Result: Normal</h3>
-                                <p style="color: #388e3c; margin: 10px 0 0 0; font-size: 1.3rem;">Confidence: {confidence:.2%}</p>
-                            </div>
-                            """, 
-                            unsafe_allow_html=True
-                        )
-                        st.balloons()
-                    else:
-                        # Determine color based on condition
-                        if "COVID" in prediction_label:
-                            color = "#d32f2f"
-                            bg_color = "rgba(211, 47, 47, 0.2)"
-                        else:
-                            color = "#f57c00"
-                            bg_color = "rgba(245, 124, 0, 0.2)"
+                    if pneumonia_session:
+                        outputs = pneumonia_session.run([pneumonia_output_name], {pneumonia_input_name: img_np})[0]
                         
-                        st.markdown(
-                            f"""
-                            <div class="result-box" style="background-color: {bg_color}; border: 1px solid {color}; color: {color}; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px;">
-                                <h3 style="color: {color} !important; margin: 0; font-size: 1.8rem;">Result: {prediction_label}</h3>
-                                <p style="color: {color}; margin: 10px 0; font-size: 1.3rem;">Confidence: {confidence:.2%}</p>
-                                <p style="margin-top: 15px; font-size: 1.1rem;"><strong>⚠️ Warning:</strong> The image indicates a condition. Please consult a medical professional.</p>
-                            </div>
-                            """, 
-                            unsafe_allow_html=True
-                        )
+                        probs = outputs[0]
+                        top_index = np.argmax(probs)
+                        confidence = float(probs[top_index])
+                        prediction_label = pneumonia_classes[top_index]
+                        
+                        # Result Display
+                        if prediction_label == "Normal":
+                            st.markdown(
+                                f"""
+                                <div class="result-box" style="background-color: rgba(56, 142, 60, 0.2); border: 1px solid #388e3c; color: #388e3c; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px;">
+                                    <h3 style="color: #388e3c !important; margin: 0; font-size: 1.8rem;">Result: Normal</h3>
+                                    <p style="color: #388e3c; margin: 10px 0 0 0; font-size: 1.3rem;">Confidence: {confidence:.2%}</p>
+                                </div>
+                                """, 
+                                unsafe_allow_html=True
+                            )
+                            st.balloons()
+                        else:
+                            # Determine color based on condition
+                            if "virus" in prediction_label or "COVID" in prediction_label:
+                                color = "#d32f2f"
+                                bg_color = "rgba(211, 47, 47, 0.2)"
+                            else:
+                                color = "#f57c00"
+                                bg_color = "rgba(245, 124, 0, 0.2)"
+                            
+                            st.markdown(
+                                f"""
+                                <div class="result-box" style="background-color: {bg_color}; border: 1px solid {color}; color: {color}; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px;">
+                                    <h3 style="color: {color} !important; margin: 0; font-size: 1.8rem;">Result: {prediction_label}</h3>
+                                    <p style="color: {color}; margin: 10px 0; font-size: 1.3rem;">Confidence: {confidence:.2%}</p>
+                                    <p style="margin-top: 15px; font-size: 1.1rem;"><strong>⚠️ Warning:</strong> The image indicates a condition. Please consult a medical professional.</p>
+                                </div>
+                                """, 
+                                unsafe_allow_html=True
+                            )
+                    else:
+                        st.error("Pneumonia model session not found.")
 
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
@@ -354,4 +345,5 @@ def pneumonia_predictor_page():
         </div>
     """, unsafe_allow_html=True)
 
-pneumonia_predictor_page()
+if __name__ == "__main__":
+    pneumonia_predictor_page()
