@@ -1,141 +1,204 @@
 import streamlit as st
-import requests
-import json
-import joblib
-import numpy as np
 import pandas as pd
-from PIL import Image
-import io
-import os
-import onnxruntime as ort
+from utils import load_css, load_all_models, ask_medbot, MEDICAL_PROMPT
 
-# --- 1. CONFIGURATION ---
-API_KEY = "AIzaSyAteE4f2FfYwFwZjw17QiHVlLVsrltQQBQ"
-API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={API_KEY}"
+# --- 1. Page Config ---
+st.set_page_config(page_title="Heart Risk", page_icon="❤️", layout="wide")
+load_css() # Loads the Medical Blue Theme from utils
 
-MEDICAL_PROMPT = """
-You are MedBot, a professional medical AI assistant. 
-Answer questions clearly and empathetically. 
-If a user asks about a specific medical test result, explain what it means.
-ALWAYS end with a disclaimer that you are an AI, not a doctor.
-"""
+# --- 2. Navigation ---
+if st.sidebar.button("🏠 Back to Home"):
+    st.switch_page("app.py")
 
-# --- 2. STYLING (CSS) ---
-def load_css():
-    st.markdown("""
-        <style>
-        /* Hide Default Streamlit Elements */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: visable;}
-       /* header {visibility: hidden;}*/
-        div[data-testid="stSidebarNav"] {display: none;} /* Hide default sidebar list */
-        
-        /* Medical Blue Theme */
-        .stApp {
-            background-color: #FAFAFA;
-        }
-        
-        /* Card Styling */
-        .css-card {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            border-left: 6px solid #0277BD;
-            text-align: center;
-        }
-        
-        /* Buttons */
-        div.stButton > button {
-            background-color: #0277BD;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            font-weight: bold;
-        }
-        div.stButton > button:hover {
-            background-color: #01579B;
-            color: white;
-        }
+# --- 3. Load Models ---
+MODELS = load_all_models()
 
-        /* Custom Title */
-        h1, h2, h3 {
-            color: #0277BD;
-            font-family: 'Arial', sans-serif;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+if MODELS is None:
+    st.error("Model initialization failed. Check your 'models/' folder structure.")
+    st.stop()
 
-# --- 3. AI CHAT FUNCTION ---
-def ask_medbot(user_query, system_prompt):
-    if not API_KEY: return "⚠️ API Key missing."
+# --- 4. Helper Functions for Heart Data ---
+# Note: These are here because they involve complex mapping specific to this page
+
+def calculate_bmi(height_cm, weight_kg):
+    if height_cm == 0: return 0
+    return weight_kg / ((height_cm / 100) ** 2)
+
+def get_age_category(age):
+    age = int(age)
+    if 18 <= age <= 24: return 'Young'
+    if 25 <= age <= 39: return 'Adult'
+    if 40 <= age <= 54: return 'Mid-Aged'
+    if 55 <= age <= 64: return 'Senior-Adult'
+    if age >= 65: return 'Elderly'
+    return 'Adult'
+
+def prepare_heart_features(data):
+    # Get scaler from utils
+    scaler = MODELS['heart_scaler']
     
-    payload = {
-        "contents": [{"parts": [{"text": user_query}]}],
-        "systemInstruction": {"parts": [{"text": system_prompt}]}
+    height = data.get('Height')
+    weight = data.get('Weight')
+    age = data.get('Age')
+    bmi = calculate_bmi(height, weight)
+    
+    # Mappings
+    general_health_map = {'Excellent': 0, 'Fair': 1, 'Good': 2, 'Poor': 3, 'Very Good': 4}
+    checkup_map = {'More than 5 years': 0, 'Never': 1, 'Past 1 year': 2, 'Past 2 years': 3, 'Past 5 years': 4}
+    binary_map = {'No': 0, 'Yes': 1} 
+    diabetes_map = {'No': 0, 'No Pre Diabetes': 1, 'Only during pregnancy': 2, 'Yes': 3}
+    age_category_map = {'Adult': 0, 'Elderly': 1, 'Mid-Aged': 2, 'Senior-Adult': 3, 'Young': 4}
+    bmi_group_map = {'Normal weight': 0, 'Obese I': 1, 'Obese II': 2, 'Overweight': 3, 'Underweight': 4}
+
+    # BMI Group Calculation
+    bmi_bins = [12.02, 18.3, 26.85, 31.58, 37.8, 100]
+    bmi_labels = ['Underweight', 'Normal weight', 'Overweight', 'Obese I', 'Obese II']
+    try:
+        bmi_group_str = pd.cut([bmi], bins=bmi_bins, labels=bmi_labels, right=False)[0]
+    except (ValueError, IndexError):
+        bmi_group_str = 'Normal weight'
+
+    # Lifestyle Mappers
+    def map_smoking(val): return 1 if val in ['Former', 'Current'] else 0 
+    def map_alcohol(val):
+        if val == 'Never': return 0
+        if val == 'Occasionally': return 4
+        if val == 'Weekly': return 8
+        if val == 'Daily': return 30
+        return 0
+    def map_consumption(val):
+        if val == '0': return 0
+        if val == '1–2': return 12 
+        if val == '3–5': return 20 
+        if val == '6–7': return 30 
+        return 0
+    def map_fried(val):
+        if val == 'Rarely': return 2
+        if val == 'Weekly': return 4
+        if val == 'Several times per week': return 8
+        return 0
+        
+    age_cat_str = get_age_category(age)
+
+    # Construct Dictionary
+    feature_dict = {
+        'general_health': general_health_map.get(data.get('General_Health')),
+        'checkup': checkup_map.get(data.get('Checkup')),
+        'exercise': binary_map.get(data.get('Exercise')),
+        'skin_cancer': binary_map.get(data.get('Skin_Cancer')),
+        'other_cancer': binary_map.get(data.get('Other_Cancer')),
+        'depression': binary_map.get(data.get('Depression')),
+        'diabetes': diabetes_map.get(data.get('Diabetes')),
+        'arthritis': binary_map.get(data.get('Arthritis')),
+        'age_category': age_category_map.get(age_cat_str),
+        'height': height,
+        'weight': weight,
+        'bmi': bmi,
+        'bmi_group': bmi_group_map.get(bmi_group_str, 0), 
+        'alcohol_consumption': map_alcohol(data.get('Alcohol_Consumption')),
+        'fruit_consumption': map_consumption(data.get('Fruit_Consumption')),
+        'vegetables_consumption': map_consumption(data.get('Vegetables_Consumption')),
+        'potato_consumption': map_fried(data.get('FriedPotato_Consumption')),
+        'sex_Female': 1 if data.get('Sex') == 'Female' else 0,
+        'sex_Male': 1 if data.get('Sex') == 'Male' else 0,
+        'smoking_history_No': 1 if map_smoking(data.get('Smoking_History')) == 0 else 0,
+        'smoking_history_Yes': 1 if map_smoking(data.get('Smoking_History')) == 1 else 0,
     }
-    headers = {"Content-Type": "application/json"}
+
+    # Ensure Exact Order
+    final_feature_order = [
+        'general_health', 'checkup', 'exercise', 'skin_cancer', 'other_cancer',
+        'depression', 'diabetes', 'arthritis', 'age_category', 'height', 'weight',
+        'bmi', 'bmi_group', 'alcohol_consumption', 'fruit_consumption', 'vegetables_consumption',
+        'potato_consumption', 'sex_Female', 'sex_Male',
+        'smoking_history_No', 'smoking_history_Yes'
+    ]
     
-    try:
-        response = requests.post(API_URL, headers=headers, data=json.dumps(payload))
-        if response.status_code != 200: return f"Error: {response.text}"
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        return f"Connection Error: {e}"
-
-# --- 4. MODEL LOADING ---
-@st.cache_resource
-def load_all_models():
-    MODEL_DIR = "models/"
-    if not os.path.isdir(MODEL_DIR): return None
-    
-    try:
-        # Image Models
-        pneumonia = ort.InferenceSession(os.path.join(MODEL_DIR, "best.onnx"))
-        malaria = ort.InferenceSession(os.path.join(MODEL_DIR, "malaria_model.onnx"))
-        
-        # Tabular Models
-        diabetes = joblib.load(os.path.join(MODEL_DIR, "diabetes_model_package/diabetes_ensemble_model.joblib"))
-        d_scaler = joblib.load(os.path.join(MODEL_DIR, "diabetes_model_package/diabetes_scaler.joblib"))
-        heart = joblib.load(os.path.join(MODEL_DIR, "HeartRisk_model_package/HeartRisk_model.joblib"))
-        h_scaler = joblib.load(os.path.join(MODEL_DIR, "HeartRisk_model_package/HeartRisk_scaler.joblib"))
-        
-        return {
-            "pneumonia_sess": pneumonia,
-            "malaria_sess": malaria,
-            "diabetes_model": diabetes,
-            "diabetes_scaler": d_scaler,
-            "heart_model": heart,
-            "heart_scaler": h_scaler,
-            "pneu_in": pneumonia.get_inputs()[0].name,
-            "pneu_out": pneumonia.get_outputs()[0].name,
-            "mal_in": malaria.get_inputs()[0].name,
-            "mal_out": malaria.get_outputs()[0].name
-        }
-    except Exception as e:
-        st.error(f"Error loading models: {e}")
-        return None
-
-# --- 5. PREPROCESSING FUNCTIONS ---
-def process_image(image_bytes, target_size=(224, 224)):
-    img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-    img = img.resize(target_size)
-    img_np = np.array(img).astype(np.float32) / 255.0
-    img_np = img_np.transpose(2, 0, 1) 
-    img_np = np.expand_dims(img_np, axis=0)
-    return img_np
-
-def calculate_bmi(height, weight):
-    return weight / ((height/100)**2) if height > 0 else 0
-
-def prepare_diabetes_features(data, scaler):
-    features = pd.DataFrame([[
-        data['Pregnancies'], data['Glucose'], data['BP'], 29.0, 125.0, 
-        data['BMI'], 0.3725, data['Age']
-    ]], columns=['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age'])
+    features = pd.DataFrame([feature_dict], columns=final_feature_order)
     return scaler.transform(features)
 
-# (Add prepare_heart_features here using the same logic from previous code if needed)
+# --- 5. UI Layout ---
+
+st.title("❤️ Heart Disease Risk Assessment")
+
+st.markdown('<div class="css-card">', unsafe_allow_html=True)
+st.write("Provide your lifestyle and health inputs for a 10-year risk assessment.")
+
+with st.form("heart_form"):
+    col1, col2, col3 = st.columns(3)
+    
+    # COLUMN 1: Basic Biometrics
+    with col1:
+        st.markdown("### 👤 Biometrics")
+        age = st.number_input("Age (Years)", min_value=18, max_value=120, value=45)
+        sex = st.selectbox("Sex", ['Female', 'Male'])
+        height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=170.0, format="%.1f")
+        weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=80.0, format="%.1f")
+
+    # COLUMN 2: Medical History
+    with col2:
+        st.markdown("### 🏥 Health History")
+        general_health = st.selectbox("General Health Status", ['Very Good', 'Good', 'Fair', 'Poor', 'Excellent'])
+        checkup = st.selectbox("Last Health Checkup", ['Past 1 year', 'Past 2 years', 'Past 5 years', 'More than 5 years', 'Never'])
+        diabetes = st.selectbox("Diabetes Status", ['No', 'No Pre Diabetes', 'Only during pregnancy', 'Yes'])
+        arthritis = st.selectbox("Have Arthritis?", ['No', 'Yes'])
+        depression = st.selectbox("Have Depression?", ['No', 'Yes'])
+
+    # COLUMN 3: Lifestyle
+    with col3:
+        st.markdown("### 🥗 Lifestyle")
+        smoking = st.selectbox("Smoking History", ['Never', 'Former', 'Current'])
+        exercise = st.selectbox("Any physical exercise in past 30 days?", ['No', 'Yes'])
+        alcohol = st.selectbox("Avg. Alcoholic drinks per day", ['Never', 'Occasionally', 'Weekly', 'Daily'], index=0)
+        fruit = st.selectbox("Fruit servings per day", ['0', '1–2', '3–5', '6–7'])
+        vegetables = st.selectbox("Vegetable servings per day", ['0', '1–2', '3–5', '6–7'])
+        fried_potato = st.selectbox("Fried Potato consumption", ['Rarely', 'Weekly', 'Several times per week'])
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    submitted = st.form_submit_button("🔍 Predict Heart Risk")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# --- 6. Prediction Logic ---
+if submitted:
+    if height == 0 or weight == 0:
+        st.error("Height and Weight must be greater than zero.")
+    else:
+        # Collect Data
+        data = {
+            'Age': age, 'Sex': sex, 'Height': height, 'Weight': weight,
+            'General_Health': general_health, 'Checkup': checkup, 'Diabetes': diabetes,
+            'Arthritis': arthritis, 'Depression': depression,
+            'Smoking_History': smoking, 'Exercise': exercise,
+            'Alcohol_Consumption': alcohol, 'Fruit_Consumption': fruit,
+            'Vegetables_Consumption': vegetables, 'FriedPotato_Consumption': fried_potato,
+        }
+        
+        with st.spinner('Analyzing cardiovascular health...'):
+            try:
+                # 1. Prepare features
+                features = prepare_heart_features(data)
+                
+                # 2. Predict (Using model from utils)
+                # Note: utils returns 'heart_model' in the dictionary
+                prob = MODELS['heart_model'].predict_proba(features)[0][1]
+                risk_percent = prob * 100
+                
+                prediction_label = "High Risk" if prob > 0.5 else "Low Risk"
+                
+                if prob > 0.5:
+                    color = "#D32F2F" # Red
+                else:
+                    color = "#388E3C" # Green
+                
+                # 3. Display Result
+                st.markdown(f"### Result: <span style='color:{color}'>{prediction_label}</span> (Risk: {risk_percent:.1f}%)", unsafe_allow_html=True)
+
+                # 4. AI Explanation (Using AI from utils)
+                ai_prompt = f"Patient Heart Risk Analysis: {prediction_label} ({risk_percent:.1f}%). Age: {age}, Smoking: {smoking}, Exercise: {exercise}. Explain this result."
+                explanation = ask_medbot(ai_prompt, MEDICAL_PROMPT)
+                
+                st.info(f"👨‍⚕️ **Dr. AI Analysis:**\n\n{explanation}")
+                
+            except Exception as e:
+                st.error(f"Prediction failed: {e}")
