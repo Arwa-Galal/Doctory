@@ -1,349 +1,69 @@
 import streamlit as st
-from PIL import Image
-import io
 import numpy as np
-# We import 'process_image' but rename it to 'process_image_yolo' to match your code logic
-from utils import process_image as process_image_yolo, load_all_models
+from PIL import Image
+from utils import load_css, load_all_models, process_image, ask_medbot, MEDICAL_PROMPT
 
-# --- Page Config ---
-st.set_page_config(
-    page_title="Pneumonia Check",
-    page_icon="🫁",
-    layout="wide"
-)
+# --- 1. Page Config ---
+st.set_page_config(page_title="Pneumonia Check", page_icon="🫁", layout="wide")
+load_css() # Loads the Blue/White Theme
 
-# --- Navigation ---
+# --- 2. Navigation ---
 if st.sidebar.button("🏠 Back to Home"):
     st.switch_page("app.py")
 
-# --- Load Models ---
+# --- 3. Load Models ---
 MODELS = load_all_models()
 
-if MODELS is None:
-    st.error("Model initialization failed. Check your 'models/' folder structure.")
-    st.stop()
+st.title("🫁 Pneumonia X-Ray Check")
+st.markdown("Upload a chest X-Ray image to detect Pneumonia or Normal conditions.")
 
-# --- Custom CSS (Your Design) ---
-def local_css():
-    st.markdown(
-        """
-        <style>
-        /* Import Google Font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+# --- 4. Input Section (The "Card" Look) ---
+st.markdown('<div class="css-card">', unsafe_allow_html=True)
+col1, col2 = st.columns([1, 2])
 
-        /* Global Body Styling */
-        .stApp {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
-        }
-
-        /* Remove default Streamlit padding */
-        .main .block-container {
-            padding-top: 0rem;
-            padding-bottom: 0rem;
-            max-width: 100%;
-        }
-
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%);
-            color: white;
-            min-height: 40vh; /* Adjusted height for better fit */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 2rem;
-            padding: 2rem;
-        }
-
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-            animation: pulse 10s infinite ease-in-out;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.1); }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            animation: fadeInUp 1.5s ease-out;
-        }
-
-        .hero-title {
-            font-weight: 700;
-            font-size: 3.5rem;
-            color: white !important;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            animation: glow 2s infinite alternate;
-            margin-bottom: 1rem;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
-            to { text-shadow: 0 0 30px rgba(255, 255, 255, 0.8); }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Content Section */
-        .content-section {
-            padding: 20px 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Glassmorphism Card Effect */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 71, 161, 0.3);
-            border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(13, 71, 161, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-            padding: 50px;
-            margin-bottom: 40px;
-            position: relative;
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(13, 71, 161, 0.1) 0%, transparent 100%);
-            border-radius: 25px;
-            z-index: -1;
-        }
-
-        .glass-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 35px 70px rgba(13, 71, 161, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        }
-
-        /* Headers */
-        h1, h2, h3 {
-            color: #0d47a1 !important;
-            font-weight: 700;
-            text-align: center;
-        }
-
-        h2 {
-            margin-bottom: 1.5rem;
-        }
-
-        /* File Uploader Styling */
-        [data-testid='stFileUploader'] {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid rgba(13, 71, 161, 0.3);
-            border-radius: 20px;
-            padding: 20px;
-            transition: all 0.4s ease;
-        }
-        
-        [data-testid='stFileUploader']:hover {
-            border-color: #0d47a1;
-            transform: scale(1.02);
-            box-shadow: 0 10px 30px rgba(13, 71, 161, 0.2);
-        }
-
-        /* Button Styling */
-        .stButton > button {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 35px !important;
-            padding: 18px 50px !important;
-            font-weight: 600 !important;
-            font-size: 1.2rem !important;
-            box-shadow: 0 10px 30px rgba(13, 71, 161, 0.3) !important;
-            transition: all 0.4s ease !important;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stButton > button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(13, 71, 161, 0.5) !important;
-        }
-
-        /* Result Box Animations */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-30px) scale(0.9); }
-            to { opacity: 1; transform: translateX(0) scale(1); }
-        }
-
-        .result-box {
-            animation: slideIn 0.6s ease-out;
-            box-shadow: 0 10px 30px rgba(13, 71, 161, 0.2);
-        }
-        
-        /* Text Colors */
-        p, label {
-            color: #0d47a1;
-            font-size: 1.1rem;
-            text-align: center;
-        }
-
-        /* Footer */
-        .footer {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-            color: white;
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 50px;
-        }
-
-        .footer p {
-            color: white !important;
-            margin: 0;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# --- Main Logic ---
-
-# Retrieve Model Components from utils.py loaded dictionary
-# Note: We use the keys defined in utils.py. 
-# If you used the shortened keys in utils, change them here (e.g., 'pneumonia_sess').
-# Assuming you used the LONG keys from your previous prompt:
-try:
-    pneumonia_session = MODELS.get('pneumonia_session') or MODELS.get('pneumonia_sess')
-    pneumonia_input_name = MODELS.get('pneumonia_input_name') or MODELS.get('pneu_in')
-    pneumonia_output_name = MODELS.get('pneumonia_output_name') or MODELS.get('pneu_out')
+with col1:
+    st.info("Supported formats: JPEG, PNG")
     
-    # Define classes if not in utils
-    pneumonia_classes = MODELS.get('pneumonia_classes') or ["Normal", "Pneumonia_bacteria", "Pneumonia_virus"]
-except:
-    st.error("Error retrieving model components.")
-    st.stop()
+with col2:
+    uploaded_file = st.file_uploader("Upload Chest X-Ray", type=["jpg", "png", "jpeg"])
 
-def pneumonia_predictor_page():
-    # Apply custom CSS
-    local_css()
+st.markdown('</div>', unsafe_allow_html=True)
 
-    # Hero Section
-    st.markdown("""
-        <div class="hero-section">
-            <div class="hero-content">
-                <h1 class="hero-title">🫁 Chest X-ray Detection</h1>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+# --- 5. Analysis Logic ---
+if uploaded_file:
+    # Show the image centered
+    col_img1, col_img2, col_img3 = st.columns([1, 1, 1])
+    with col_img2:
+        st.image(uploaded_file, caption="Uploaded X-Ray", width=300)
 
-    # Main Content Section
-    st.markdown('<div class="content-section">', unsafe_allow_html=True)
-    
-    # Model Card
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("<h2>🧠 Try the Model</h2>", unsafe_allow_html=True)
-    st.markdown("<p>Upload a chest X-ray image, and the model will predict the condition.</p>", unsafe_allow_html=True)
-
-    uploaded_file = st.file_uploader("Choose a Chest X-Ray Image...", type=["png", "jpg", "jpeg"])
-
-    if uploaded_file is not None:
-        image_bytes = uploaded_file.read()
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        # Center image
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.image(image, use_column_width=True)
-
-        st.write("")
-
-        if st.button("🔍 Analyze X-Ray"):
-            with st.spinner('Analyzing image...'):
-                try:
-                    # Preprocessing (Using utils function aliased as process_image_yolo)
-                    img_np = process_image_yolo(image_bytes, target_size=(224, 224))
+    # Analyze Button
+    if st.button("Analyze Image"):
+        if MODELS and MODELS.get('pneumonia_sess'):
+            try:
+                with st.spinner("Analyzing lung patterns..."):
+                    # 1. Preprocess
+                    image_bytes = uploaded_file.read()
+                    img_input = process_image(image_bytes)
                     
-                    # Inference
-                    if pneumonia_session:
-                        outputs = pneumonia_session.run([pneumonia_output_name], {pneumonia_input_name: img_np})[0]
-                        
-                        probs = outputs[0]
-                        top_index = np.argmax(probs)
-                        confidence = float(probs[top_index])
-                        prediction_label = pneumonia_classes[top_index]
-                        
-                        # Result Display
-                        if prediction_label == "Normal":
-                            st.markdown(
-                                f"""
-                                <div class="result-box" style="background-color: rgba(56, 142, 60, 0.2); border: 1px solid #388e3c; color: #388e3c; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px;">
-                                    <h3 style="color: #388e3c !important; margin: 0; font-size: 1.8rem;">Result: Normal</h3>
-                                    <p style="color: #388e3c; margin: 10px 0 0 0; font-size: 1.3rem;">Confidence: {confidence:.2%}</p>
-                                </div>
-                                """, 
-                                unsafe_allow_html=True
-                            )
-                            st.balloons()
-                        else:
-                            # Determine color based on condition
-                            if "virus" in prediction_label or "COVID" in prediction_label:
-                                color = "#d32f2f"
-                                bg_color = "rgba(211, 47, 47, 0.2)"
-                            else:
-                                color = "#f57c00"
-                                bg_color = "rgba(245, 124, 0, 0.2)"
-                            
-                            st.markdown(
-                                f"""
-                                <div class="result-box" style="background-color: {bg_color}; border: 1px solid {color}; color: {color}; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px;">
-                                    <h3 style="color: {color} !important; margin: 0; font-size: 1.8rem;">Result: {prediction_label}</h3>
-                                    <p style="color: {color}; margin: 10px 0; font-size: 1.3rem;">Confidence: {confidence:.2%}</p>
-                                    <p style="margin-top: 15px; font-size: 1.1rem;"><strong>⚠️ Warning:</strong> The image indicates a condition. Please consult a medical professional.</p>
-                                </div>
-                                """, 
-                                unsafe_allow_html=True
-                            )
+                    # 2. Inference (ONNX)
+                    session = MODELS['pneumonia_sess']
+                    input_name = MODELS['pneu_in']
+                    output_name = MODELS['pneu_out']
+                    
+                    result = session.run([output_name], {input_name: img_input})
+                    
+                    # 3. Process Result
+                    # Assuming classification: [Normal, Bacterial, Viral]
+                    probs = result[0][0] # Adjust based on your model output shape
+                    idx = np.argmax(probs)
+                    classes = ["Normal", "Pneumonia (Bacterial)", "Pneumonia (Viral)"]
+                    
+                    # Safety check for index
+                    if idx < len(classes):
+                        final_result = classes[idx]
                     else:
-                        st.error("Pneumonia model session not found.")
+                        final_result = "Unknown"
 
-                except Exception as e:
-                    st.error(f"Prediction failed: {e}")
-
-    st.markdown('</div>', unsafe_allow_html=True)  # Close glass-card
-
-    # Explanation Card
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("<h2>ℹ️ How Does the Model Work?</h2>", unsafe_allow_html=True)
-    st.markdown("""
-        <p class="info-text">This is a convolutional neural network (CNN) model trained on a dataset of chest X-ray images. 
-        It analyzes the uploaded image and classifies it into categories like Normal, Pneumonia, or COVID based on learned patterns.</p>
-        <p class="info-text"><strong>Note:</strong> This model is for educational purposes. 
-        Always consult qualified medical professionals for actual diagnosis.</p>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)  # Close glass-card
-
-    st.markdown('</div>', unsafe_allow_html=True)  # Close content-section
-
-    # Footer
-    st.markdown("""
-        <div class="footer">
-            <p>© 2023 Chest X-ray Detection Page. All rights reserved.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    pneumonia_predictor_page()
+                    # 4. Color Logic (Green for Normal, Red for Disease)
+                    if "Normal" in final_result:
+                        color = "#388E3C"
