@@ -5,6 +5,10 @@ import numpy as np
 from utils import process_image, load_all_models
 
 # --- Custom CSS with Enhanced Styling from HTML ---
+MODELS = load_all_models()
+
+if st.sidebar.button("🏠 Back to Home"):
+    st.switch_page("app.py")
 def local_css():
     st.markdown(
         """
