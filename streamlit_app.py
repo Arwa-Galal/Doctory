@@ -44,7 +44,7 @@ with st.sidebar:
     st.title("MedBot Pro")
     
     # Secure API Key Input
-    api_key = st.text_input("🔑 Google API Key", type="password", help="Paste your AIza key here")
+    api_key = "AIzaSyBxYCfAwsyhbhiA8EQd6dcn-RdsZQ9xtZ8"
     
     st.markdown("---")
     
