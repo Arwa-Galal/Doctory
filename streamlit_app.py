@@ -15,56 +15,83 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS to hide default menu and modernize the look
+# Custom CSS for Medical Blue & White Theme
 st.markdown("""
     <style>
-    /* Hide default Streamlit menu and footer */
+    /* 1. Hide default Streamlit menu and footer */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Hide the default sidebar navigation list */
+    /* 2. Hide the default sidebar navigation list */
     div[data-testid="stSidebarNav"] {display: none;}
     
-    /* Card Styling */
+    /* 3. Medical Blue Theme Setup */
+    /* Main Background is White by default */
+    
+    /* Sidebar Background color adjustment (Optional - keeps it clean light grey) */
+    section[data-testid="stSidebar"] {
+        background-color: #F8F9FA;
+    }
+
+    /* Card Styling - Changed border to Medical Blue */
     .css-card {
         background-color: #ffffff;
         padding: 20px;
         border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         margin-bottom: 20px;
-        border-left: 5px solid #00ADB5;
+        border-left: 5px solid #0277BD; /* Medical Blue */
+    }
+    
+    /* Button Styling Override */
+    div.stButton > button {
+        background-color: #0277BD;
+        color: white;
+        border-radius: 8px;
+        border: none;
+    }
+    div.stButton > button:hover {
+        background-color: #01579B; /* Darker Blue on Hover */
+        color: white;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # --- 2. SIDEBAR & CONFIGURATION ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3774/3774299.png", width=100) # Placeholder Logo
-    st.title("MedBot Pro")
+    # You can replace this URL with your own logo file if you have one
+    st.image("https://cdn-icons-png.flaticon.com/512/3004/3004458.png", width=80) 
+    st.markdown("<h1 style='text-align: center; color: #0277BD;'>MedBot Pro</h1>", unsafe_allow_html=True)
     
-    # Secure API Key Input
+    # API Key (As requested, keeping it hardcoded for now)
     api_key = "AIzaSyBxYCfAwsyhbhiA8EQd6dcn-RdsZQ9xtZ8"
     
-    st.markdown("---")
+    st.write("") # Spacer
     
-    # MODERN NAVIGATION MENU
+    # MODERN NAVIGATION MENU (Blue Theme)
     selected = option_menu(
-        menu_title="Navigation",
+        menu_title=None, # Hides the title "Navigation" for a cleaner look
         options=["AI Chatbot", "Diabetes Test", "Pneumonia Check"],
-        icons=["chat-dots-fill", "activity", "lungs"],
+        icons=["chat-dots-fill", "activity", "lungs"], # Bootstrap Icons
         menu_icon="cast",
         default_index=0,
         styles={
-            "container": {"padding": "0!important", "background-color": "#f0f2f6"},
-            "icon": {"color": "#00ADB5", "font-size": "18px"}, 
-            "nav-link": {"font-size": "16px", "text-align": "left", "margin":"0px", "--hover-color": "#e1e1e1"},
-            "nav-link-selected": {"background-color": "#00ADB5"},
+            "container": {"padding": "0!important", "background-color": "transparent"},
+            "icon": {"color": "#0277BD", "font-size": "18px"}, 
+            "nav-link": {
+                "font-size": "16px", 
+                "text-align": "left", 
+                "margin":"5px", 
+                "--hover-color": "#E1F5FE", # Light blue hover
+                "color": "#333333"
+            },
+            "nav-link-selected": {"background-color": "#0277BD", "color": "white"}, # Active Blue
         }
     )
     
     st.markdown("---")
-    st.info("⚠️ **Disclaimer:** AI assistance is for educational purposes only.")
+    st.info("⚠️ **Disclaimer:** AI assistance is for educational purposes only. Always consult a doctor.")
 
 # --- 3. HELPER FUNCTIONS (AI & MODELS) ---
 
@@ -162,14 +189,19 @@ elif selected == "Diabetes Test":
             try:
                 prediction = loaded_models['diabetes'].predict(input_data)[0]
                 result_str = "Diabetic (High Risk)" if prediction == 1 else "Healthy (Low Risk)"
-                color = "red" if prediction == 1 else "green"
+                
+                # Colors based on result (Blue/Red/Green)
+                if prediction == 1:
+                    color = "#D32F2F" # Red
+                else:
+                    color = "#388E3C" # Green
                 
                 # 2. Ask AI to explain
                 analysis_prompt = f"The patient has tested: {result_str}. Glucose: {glucose}, BMI: {bmi}. Explain this result briefly."
                 ai_explanation = ask_medbot(analysis_prompt, medical_prompt)
                 
                 # 3. Display
-                st.markdown(f"### Result: :{color}[{result_str}]")
+                st.markdown(f"### Result: <span style='color:{color}'>{result_str}</span>", unsafe_allow_html=True)
                 st.info(f"👨‍⚕️ **Dr. AI Analysis:**\n\n{ai_explanation}")
             except Exception as e:
                 st.error(f"Prediction Error: {e}")
@@ -188,5 +220,3 @@ elif selected == "Pneumonia Check":
         st.image(uploaded_file, width=300)
         if st.button("Analyze Image"):
             st.info("Image analysis model would run here.")
-            # Placeholder for ONNX logic
-            # Once you have the result, you can pass it to 'ask_medbot' like we did in Diabetes.
