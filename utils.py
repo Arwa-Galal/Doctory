@@ -26,8 +26,8 @@ def load_css():
         <style>
         /* Hide Default Streamlit Elements */
         #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
+       /* footer {visibility: hidden;}*/
+       /* header {visibility: hidden;}*/
         div[data-testid="stSidebarNav"] {display: none;}
         
         /* Medical Blue Theme */
