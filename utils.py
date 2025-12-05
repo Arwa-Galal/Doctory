@@ -89,7 +89,6 @@ def load_all_models():
     
     try:
         # Image Models (ONNX)
-        # We use try-except blocks for individual models so one missing file doesn't crash the whole app
         try: pneumonia = ort.InferenceSession(os.path.join(MODEL_DIR, "best.onnx"))
         except: pneumonia = None
         
@@ -172,4 +171,69 @@ def prepare_heart_features(data):
     binary_map = {'No': 0, 'Yes': 1} 
     diabetes_map = {'No': 0, 'No Pre Diabetes': 1, 'Only during pregnancy': 2, 'Yes': 3}
     age_category_map = {'Adult': 0, 'Elderly': 1, 'Mid-Aged': 2, 'Senior-Adult': 3, 'Young': 4}
-    bmi_group_map = {'Normal weight': 0, 'Obese I': 1, 'Obese II': 2,
+    bmi_group_map = {'Normal weight': 0, 'Obese I': 1, 'Obese II': 2, 'Overweight': 3, 'Underweight': 4}
+
+    # BMI Group Calculation
+    bmi_bins = [12.02, 18.3, 26.85, 31.58, 37.8, 100]
+    bmi_labels = ['Underweight', 'Normal weight', 'Overweight', 'Obese I', 'Obese II']
+    try:
+        bmi_group_str = pd.cut([bmi], bins=bmi_bins, labels=bmi_labels, right=False)[0]
+    except:
+        bmi_group_str = 'Normal weight'
+
+    # Lifestyle Mappers
+    def map_smoking(val): return 1 if val in ['Former', 'Current'] else 0 
+    def map_alcohol(val):
+        if val == 'Never': return 0
+        if val == 'Occasionally': return 4
+        if val == 'Weekly': return 8
+        if val == 'Daily': return 30
+        return 0
+    def map_consumption(val):
+        if val == '0': return 0
+        if val == '1–2': return 12 
+        if val == '3–5': return 20 
+        if val == '6–7': return 30 
+        return 0
+    def map_fried(val):
+        if val == 'Rarely': return 2
+        if val == 'Weekly': return 4
+        if val == 'Several times per week': return 8
+        return 0
+        
+    age_cat_str = get_age_category(age)
+
+    feature_dict = {
+        'general_health': general_health_map.get(data.get('General_Health')),
+        'checkup': checkup_map.get(data.get('Checkup')),
+        'exercise': binary_map.get(data.get('Exercise')),
+        'skin_cancer': binary_map.get(data.get('Skin_Cancer')),
+        'other_cancer': binary_map.get(data.get('Other_Cancer')),
+        'depression': binary_map.get(data.get('Depression')),
+        'diabetes': diabetes_map.get(data.get('Diabetes')),
+        'arthritis': binary_map.get(data.get('Arthritis')),
+        'age_category': age_category_map.get(age_cat_str),
+        'height': height,
+        'weight': weight,
+        'bmi': bmi,
+        'bmi_group': bmi_group_map.get(bmi_group_str, 0), 
+        'alcohol_consumption': map_alcohol(data.get('Alcohol_Consumption')),
+        'fruit_consumption': map_consumption(data.get('Fruit_Consumption')),
+        'vegetables_consumption': map_consumption(data.get('Vegetables_Consumption')),
+        'potato_consumption': map_fried(data.get('FriedPotato_Consumption')),
+        'sex_Female': 1 if data.get('Sex') == 'Female' else 0,
+        'sex_Male': 1 if data.get('Sex') == 'Male' else 0,
+        'smoking_history_No': 1 if map_smoking(data.get('Smoking_History')) == 0 else 0,
+        'smoking_history_Yes': 1 if map_smoking(data.get('Smoking_History')) == 1 else 0,
+    }
+
+    final_feature_order = [
+        'general_health', 'checkup', 'exercise', 'skin_cancer', 'other_cancer',
+        'depression', 'diabetes', 'arthritis', 'age_category', 'height', 'weight',
+        'bmi', 'bmi_group', 'alcohol_consumption', 'fruit_consumption', 'vegetables_consumption',
+        'potato_consumption', 'sex_Female', 'sex_Male',
+        'smoking_history_No', 'smoking_history_Yes'
+    ]
+    
+    features = pd.DataFrame([feature_dict], columns=final_feature_order)
+    return scaler.transform(features)
