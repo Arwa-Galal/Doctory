@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import load_css
+from utils import load_css ,load_all_models, MODELS
 
 st.set_page_config(page_title="Doctory", page_icon="🩺", layout="wide")
 load_css()
