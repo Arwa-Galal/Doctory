@@ -6,7 +6,7 @@ load_css()
 MODELS = load_all_models()
 
 if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("app.py")
+    st.switch_page("streamlit_app.py")
 
 st.title("🩸 Diabetes Risk Assessment")
 
