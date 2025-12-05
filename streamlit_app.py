@@ -25,7 +25,7 @@ with c1:
     st.subheader("AI Doctor")
     st.caption("Chat with our smart assistant.")
     if st.button("Start Chat"):
-        st.switch_page("pages/1_💬_Chat_With_Doctory.py")
+        st.switch_page("pages/1_AI_Chatbot.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c2:
@@ -34,7 +34,7 @@ with c2:
     st.subheader("Diabetes")
     st.caption("Check risk based on vitals.")
     if st.button("Check Diabetes"):
-        st.switch_page("pages/2_🩸_Diabetes_Test.py")
+        st.switch_page("pages/4_Diabetes_Risk.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with c3:
@@ -43,7 +43,7 @@ with c3:
     st.subheader("Pneumonia")
     st.caption("Analyze Chest X-Ray images.")
     if st.button("Check Lungs"):
-        st.switch_page("pages/3_🫁_Pneumonia_Check.py")
+        st.switch_page("pages/2_Pneumonia_X_Ray.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Row 2 (Optional for Malaria/Heart)
@@ -54,5 +54,5 @@ with c5:
     st.subheader("Malaria")
     st.caption("Analyze cell images.")
     if st.button("Check Malaria"):
-        st.switch_page("pages/4_🦟_Malaria_Check.py")
+        st.switch_page("pages/3_Malaria_Blood_Smear.py")
     st.markdown('</div>', unsafe_allow_html=True)
