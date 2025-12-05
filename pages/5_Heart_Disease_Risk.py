@@ -1,8 +1,24 @@
 import streamlit as st
 import pandas as pd
-from utils import MODELS
+# Import helpers from our central utils file
+from utils import load_css, load_all_models, ask_medbot, MEDICAL_PROMPT
 
-# --- Helper Functions for Feature Preparation ---
+# --- 1. Page Config & Theme ---
+st.set_page_config(page_title="Heart Risk", page_icon="❤️", layout="wide")
+load_css() # Apply the Medical Blue Theme
+
+# --- 2. Navigation ---
+if st.sidebar.button("🏠 Back to Home"):
+    st.switch_page("streamlit_app.py") # Corrected file name
+
+# --- 3. Load Models ---
+MODELS = load_all_models()
+
+if MODELS is None:
+    st.error("Model initialization failed. Check 'models/' folder.")
+    st.stop()
+
+# --- 4. Helper Functions (Specific to Heart Model) ---
 def calculate_bmi(height_cm, weight_kg):
     if height_cm == 0: return 0
     return weight_kg / ((height_cm / 100) ** 2)
@@ -17,10 +33,8 @@ def get_age_category(age):
     return 'Adult'
 
 def prepare_heart_features(data):
-    # Scaler
     scaler = MODELS['heart_scaler']
     
-    # Inputs
     height = data.get('Height')
     weight = data.get('Weight')
     age = data.get('Age')
@@ -88,7 +102,6 @@ def prepare_heart_features(data):
         'smoking_history_Yes': 1 if map_smoking(data.get('Smoking_History')) == 1 else 0,
     }
 
-    # Corrected Feature Order 
     final_feature_order = [
         'general_health', 'checkup', 'exercise', 'skin_cancer', 'other_cancer',
         'depression', 'diabetes', 'arthritis', 'age_category', 'height', 'weight',
@@ -100,191 +113,54 @@ def prepare_heart_features(data):
     features = pd.DataFrame([feature_dict], columns=final_feature_order)
     return scaler.transform(features)
 
-# --- Custom CSS with Enhanced Styling (Blue Theme) ---
-def local_css():
-    st.markdown(
-        """
-        <style>
-        /* Import Google Font */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+# --- 5. UI Layout ---
 
-        /* Global Body Styling */
-        .stApp {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
-        }
+st.title("❤️ Heart Disease Risk Assessment")
 
-        /* Remove default Streamlit padding */
-        .main .block-container {
-            padding-top: 0rem;
-            padding-bottom: 0rem;
-            max-width: 100%;
-        }
+st.markdown('<div class="css-card">', unsafe_allow_html=True)
+st.write("Provide your lifestyle and health inputs for a 10-year risk assessment.")
 
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%);
-            color: white;
-            min-height: 60vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            margin: -5rem -5rem 0 -5rem;
-            padding: 2rem;
-        }
-
-        /* Content Section */
-        .content-section {
-            padding: 60px 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Glassmorphism Card Effect */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(13, 71, 161, 0.3);
-            border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(13, 71, 161, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-            padding: 40px;
-            margin-bottom: 40px;
-            position: relative;
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 35px 70px rgba(13, 71, 161, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        }
-
-        /* Headers */
-        h2, h3 {
-            color: #0d47a1 !important;
-            font-weight: 700;
-            text-align: center;
-        }
-        
-        /* Form Inputs */
-        .stNumberInput > div > div > input, .stSelectbox > div > div {
-             background: rgba(255, 255, 255, 0.9);
-            border: 2px solid rgba(13, 71, 161, 0.3);
-            border-radius: 15px;
-            color: #0d47a1;
-        }
-
-        /* Labels */
-        label {
-            color: #0d47a1 !important;
-            font-weight: 600 !important;
-        }
-
-        /* Submit Button */
-        .stForm button[kind="primary"] {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 35px !important;
-            padding: 15px 40px !important;
-            font-weight: 600 !important;
-            font-size: 1.1rem !important;
-            box-shadow: 0 10px 30px rgba(13, 71, 161, 0.3) !important;
-            transition: all 0.4s ease !important;
-            width: 100%;
-        }
-        .stForm button[kind="primary"]:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(13, 71, 161, 0.5) !important;
-        }
-
-        /* Footer */
-        .footer {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-            color: white;
-            text-align: center;
-            padding: 30px 0;
-            margin-top: 60px;
-        }
-        .footer p {
-             color: white !important;
-             margin: 0;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# Ensure models are loaded
-if MODELS is None:
-    st.error("Model initialization failed. Check your 'models/' folder structure.")
-    st.stop()
-
-heart_model = MODELS['heart_model']
-
-def heart_predictor_page():
-    # Apply CSS
-    local_css()
-
-    # Hero Section
-    st.markdown("""
-        <div class="hero-section">
-            <div class="hero-content">
-                <h1 style="color: white !important; font-size: 3.5rem; text-shadow: 0 0 20px rgba(255,255,255,0.5);">❤️ Heart Disease Risk</h1>
-                <h3 style="color: white !important;">AI-Powered Assessment Tool</h3>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Main Content
-    st.markdown('<div class="content-section">', unsafe_allow_html=True)
+# Input form 
+with st.form("heart_form"):
+    col1, col2, col3 = st.columns(3)
     
-    # Form Card
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("<h2>🩺 Enter Health Metrics</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#0d47a1;'>Provide your lifestyle and health inputs for a 10-year risk assessment.</p>", unsafe_allow_html=True)
+    # COLUMN 1: Basic Biometrics
+    with col1:
+        st.markdown("### 👤 Biometrics")
+        age = st.number_input("Age (Years)", min_value=18, max_value=120, value=45)
+        sex = st.selectbox("Sex", ['Female', 'Male'])
+        height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=170.0, format="%.1f")
+        weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=80.0, format="%.1f")
+
+    # COLUMN 2: Medical History
+    with col2:
+        st.markdown("### 🏥 Health History")
+        general_health = st.selectbox("General Health Status", ['Very Good', 'Good', 'Fair', 'Poor', 'Excellent'])
+        checkup = st.selectbox("Last Health Checkup", ['Past 1 year', 'Past 2 years', 'Past 5 years', 'More than 5 years', 'Never'])
+        diabetes = st.selectbox("Diabetes Status", ['No', 'No Pre Diabetes', 'Only during pregnancy', 'Yes'])
+        arthritis = st.selectbox("Have Arthritis?", ['No', 'Yes'])
+        depression = st.selectbox("Have Depression?", ['No', 'Yes'])
+
+    # COLUMN 3: Lifestyle
+    with col3:
+        st.markdown("### 🥗 Lifestyle")
+        smoking = st.selectbox("Smoking History", ['Never', 'Former', 'Current'])
+        exercise = st.selectbox("Any physical exercise in past 30 days?", ['No', 'Yes'])
+        alcohol = st.selectbox("Avg. Alcoholic drinks per day", ['Never', 'Occasionally', 'Weekly', 'Daily'], index=0)
+        fruit = st.selectbox("Fruit servings per day", ['0', '1–2', '3–5', '6–7'])
+        vegetables = st.selectbox("Vegetable servings per day", ['0', '1–2', '3–5', '6–7'])
+        fried_potato = st.selectbox("Fried Potato consumption", ['Rarely', 'Weekly', 'Several times per week'])
+
     st.markdown("<br>", unsafe_allow_html=True)
+    submitted = st.form_submit_button("🔍 Predict Heart Risk")
 
-    # Input form 
-    with st.form("heart_form"):
-        col1, col2, col3 = st.columns(3)
-        
-        # COLUMN 1: Basic Biometrics
-        with col1:
-            st.markdown("### 👤 Biometrics")
-            age = st.number_input("Age (Years)", min_value=18, max_value=120, value=45)
-            sex = st.selectbox("Sex", ['Female', 'Male'])
-            height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=170.0, format="%.1f")
-            weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=80.0, format="%.1f")
+st.markdown('</div>', unsafe_allow_html=True)
 
-        # COLUMN 2: Medical History
-        with col2:
-            st.markdown("### 🏥 Health History")
-            general_health = st.selectbox("General Health Status", ['Very Good', 'Good', 'Fair', 'Poor', 'Excellent'])
-            checkup = st.selectbox("Last Health Checkup", ['Past 1 year', 'Past 2 years', 'Past 5 years', 'More than 5 years', 'Never'])
-            diabetes = st.selectbox("Diabetes Status", ['No', 'No Pre Diabetes', 'Only during pregnancy', 'Yes'])
-            arthritis = st.selectbox("Have Arthritis?", ['No', 'Yes'])
-            depression = st.selectbox("Have Depression?", ['No', 'Yes'])
-
-        # COLUMN 3: Lifestyle
-        with col3:
-            st.markdown("### 🥗 Lifestyle")
-            smoking = st.selectbox("Smoking History", ['Never', 'Former', 'Current'])
-            exercise = st.selectbox("Any physical exercise in past 30 days?", ['No', 'Yes'])
-            alcohol = st.selectbox("Avg. Alcoholic drinks per day", ['Never', 'Occasionally', 'Weekly', 'Daily'], index=0)
-            fruit = st.selectbox("Fruit servings per day", ['0', '1–2', '3–5', '6–7'])
-            vegetables = st.selectbox("Vegetable servings per day", ['0', '1–2', '3–5', '6–7'])
-            fried_potato = st.selectbox("Fried Potato consumption", ['Rarely', 'Weekly', 'Several times per week'])
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🔍 Predict Heart Risk")
-
-    if submitted:
-        if height == 0 or weight == 0:
-            st.error("Height and Weight must be greater than zero.")
-            return
-
+# --- 6. Prediction Logic ---
+if submitted:
+    if height == 0 or weight == 0:
+        st.error("Height and Weight must be greater than zero.")
+    else:
         data = {
             'Age': age, 'Sex': sex, 'Height': height, 'Weight': weight,
             'General_Health': general_health, 'Checkup': checkup, 'Diabetes': diabetes,
@@ -296,51 +172,28 @@ def heart_predictor_page():
         
         with st.spinner('Analyzing cardiovascular health...'):
             try:
-                # Use local helper function with corrected feature order
+                # Prepare features
                 features = prepare_heart_features(data)
-                prob = MODELS['heart_model'].predict_proba(features)[0][1]
                 
+                # Predict
+                prob = MODELS['heart_model'].predict_proba(features)[0][1]
                 risk_percent = prob * 100
+                
                 prediction_label = "High Risk" if prob > 0.5 else "Low Risk"
                 
-                # Result Display Logic
                 if prob > 0.5:
-                     # High Risk - Red
-                    st.markdown(
-                        f"""
-                        <div style="background-color: rgba(211, 47, 47, 0.2); border: 1px solid #d32f2f; color: #d32f2f; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px; box-shadow: 0 10px 30px rgba(13, 71, 161, 0.2);">
-                            <h3 style="color: #d32f2f !important; margin: 0; font-size: 1.8rem;">Result: {prediction_label} of Heart Disease</h3>
-                            <p style="color: #d32f2f; margin: 10px 0; font-size: 1.5rem; font-weight: 700;">10-Year Risk Probability: {risk_percent:.1f}%</p>
-                            <p style="margin-top: 15px; font-size: 1.1rem;"><strong>⚠️ High risk detected.</strong> Please consult a cardiologist for a complete assessment.</p>
-                        </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
+                    color = "#D32F2F" # Red
                 else:
-                    # Low Risk - Green
-                    st.markdown(
-                        f"""
-                        <div style="background-color: rgba(56, 142, 60, 0.2); border: 1px solid #388e3c; color: #388e3c; padding: 30px; border-radius: 20px; text-align: center; margin-top: 30px; box-shadow: 0 10px 30px rgba(13, 71, 161, 0.2);">
-                            <h3 style="color: #388e3c !important; margin: 0; font-size: 1.8rem;">Result: {prediction_label} of Heart Disease</h3>
-                            <p style="color: #388e3c; margin: 10px 0; font-size: 1.5rem; font-weight: 700;">10-Year Risk Probability: {risk_percent:.1f}%</p>
-                            <p style="margin-top: 15px; font-size: 1.1rem;">✓ Risk appears manageable. Maintain healthy habits and regular checkups.</p>
-                        </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                    st.balloons()
-                    
+                    color = "#388E3C" # Green
+                
+                # Display Result
+                st.markdown(f"### Result: <span style='color:{color}'>{prediction_label}</span> (Risk: {risk_percent:.1f}%)", unsafe_allow_html=True)
+
+                # AI Explanation
+                ai_prompt = f"Patient Heart Risk Analysis: {prediction_label} ({risk_percent:.1f}%). Age: {age}, Smoking: {smoking}, Exercise: {exercise}. Explain this result."
+                explanation = ask_medbot(ai_prompt, MEDICAL_PROMPT)
+                
+                st.info(f"👨‍⚕️ **Dr. AI Analysis:**\n\n{explanation}")
+                
             except Exception as e:
                 st.error(f"Prediction failed: {e}")
-
-    st.markdown('</div>', unsafe_allow_html=True) # Close glass-card
-    st.markdown('</div>', unsafe_allow_html=True) # Close content-section
-    
-    # Footer
-    st.markdown("""
-        <div class="footer">
-            <p>© 2023 Heart Risk Prediction. All rights reserved.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-heart_predictor_page()
