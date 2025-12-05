@@ -46,8 +46,21 @@ with c3:
         st.switch_page("pages/2_Pneumonia_X_Ray.py")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Row 2 (Optional for Malaria/Heart)
+# Row 2 (Added Heart and Malaria)
 c4, c5, c6 = st.columns([1, 1, 1])
+
+# Heart Disease Card (New)
+with c4:
+    st.markdown('<div class="css-card">', unsafe_allow_html=True)
+    # Using a heart icon
+    st.image("https://cdn-icons-png.flaticon.com/512/833/833472.png", width=60)
+    st.subheader("Heart Disease")
+    st.caption("Assess cardiovascular risk.")
+    if st.button("Check Heart"):
+        st.switch_page("pages/5_Heart_Risk.py")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Malaria Card
 with c5:
     st.markdown('<div class="css-card">', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/883/883407.png", width=60)
@@ -56,3 +69,7 @@ with c5:
     if st.button("Check Malaria"):
         st.switch_page("pages/3_Malaria_Blood_Smear.py")
     st.markdown('</div>', unsafe_allow_html=True)
+
+# Empty column to balance the layout (optional)
+with c6:
+    st.write("")
