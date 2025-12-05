@@ -10,7 +10,7 @@ load_css() # Loads the Blue/White Theme
 # --- 2. Navigation ---
 # Note: Ensure your main file is named 'app.py'. If it is 'streamlit_app.py', keep your change.
 if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("app.py") 
+    st.switch_page("streamlit_app.py") 
 
 # --- 3. Load Models ---
 MODELS = load_all_models()
