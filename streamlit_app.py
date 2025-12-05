@@ -6,8 +6,12 @@ import joblib
 import numpy as np
 from PIL import Image
 import os
-import onnxruntime as ort
 import io
+
+# --- IMPORTS FOR MODELS ---
+# These are the fixes for your errors
+import pandas as pd
+import onnxruntime as ort 
 
 # --- 1. PAGE CONFIGURATION & STYLING ---
 st.set_page_config(
@@ -20,33 +24,24 @@ st.set_page_config(
 # Custom CSS for Medical Blue & White Theme
 st.markdown("""
     <style>
-    /* 1. Hide default Streamlit menu and footer */
-   /*#MainMenu {visibility: hidden;}*/
-   /* footer {visibility: hidden;}*/
-   /* header {visibility: hidden;}*/
-    
-    /* 2. Hide the default sidebar navigation list */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     div[data-testid="stSidebarNav"] {display: none;}
     
-    /* 3. Medical Blue Theme Setup */
-    /* Main Background is White by default */
-    
-    /* Sidebar Background color adjustment (Optional - keeps it clean light grey) */
     section[data-testid="stSidebar"] {
         background-color: #F8F9FA;
     }
 
-    /* Card Styling - Changed border to Medical Blue */
     .css-card {
         background-color: #ffffff;
         padding: 20px;
         border-radius: 15px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         margin-bottom: 20px;
-        border-left: 5px solid #0277BD; /* Medical Blue */
+        border-left: 5px solid #0277BD;
     }
     
-    /* Button Styling Override */
     div.stButton > button {
         background-color: #0277BD;
         color: white;
@@ -54,7 +49,7 @@ st.markdown("""
         border: none;
     }
     div.stButton > button:hover {
-        background-color: #01579B; /* Darker Blue on Hover */
+        background-color: #01579B;
         color: white;
     }
     </style>
@@ -62,20 +57,18 @@ st.markdown("""
 
 # --- 2. SIDEBAR & CONFIGURATION ---
 with st.sidebar:
-    # You can replace this URL with your own logo file if you have one
     st.image("https://cdn-icons-png.flaticon.com/512/3004/3004458.png", width=80) 
     st.markdown("<h1 style='text-align: center; color: #0277BD;'>MedBot Pro</h1>", unsafe_allow_html=True)
     
-    # API Key (As requested, keeping it hardcoded for now)
+    # API Key
     api_key = "AIzaSyBxYCfAwsyhbhiA8EQd6dcn-RdsZQ9xtZ8"
     
-    st.write("") # Spacer
+    st.write("") 
     
-    # MODERN NAVIGATION MENU (Blue Theme)
     selected = option_menu(
-        menu_title=None, # Hides the title "Navigation" for a cleaner look
+        menu_title=None,
         options=["AI Chatbot", "Diabetes Test", "Pneumonia Check"],
-        icons=["chat-dots-fill", "activity", "lungs"], # Bootstrap Icons
+        icons=["chat-dots-fill", "activity", "lungs"],
         menu_icon="cast",
         default_index=0,
         styles={
@@ -85,10 +78,10 @@ with st.sidebar:
                 "font-size": "16px", 
                 "text-align": "left", 
                 "margin":"5px", 
-                "--hover-color": "#E1F5FE", # Light blue hover
+                "--hover-color": "#E1F5FE",
                 "color": "#333333"
             },
-            "nav-link-selected": {"background-color": "#0277BD", "color": "white"}, # Active Blue
+            "nav-link-selected": {"background-color": "#0277BD", "color": "white"},
         }
     )
     
@@ -128,6 +121,7 @@ def load_all_models():
     
     try:
         # --- Image Models (ONNX) ---
+        # Ensure 'import onnxruntime as ort' is at the top of the file
         pneumonia_session = ort.InferenceSession(os.path.join(MODEL_DIR, "best.onnx"))
         malaria_session = ort.InferenceSession(os.path.join(MODEL_DIR, "malaria_model.onnx"))
 
@@ -157,23 +151,14 @@ def load_all_models():
 MODELS = load_all_models()
 
 # --------------------------------------------------------------------
-# 2. HELPER FUNCTIONS 
+# 4. DATA PROCESSING FUNCTIONS 
 # --------------------------------------------------------------------
 
 def process_image_yolo(image_bytes, target_size=(224, 224)):
-    """Preprocesses image for the Pneumonia (YOLO-based ONNX) model."""
     img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     img = img.resize(target_size)
     img_np = np.array(img).astype(np.float32) / 255.0
     img_np = img_np.transpose(2, 0, 1)  # (H, W, C) -> (C, H, W)
-    img_np = np.expand_dims(img_np, axis=0)
-    return img_np
-
-def process_image_keras(image_bytes, target_size=(224, 224)):
-    """Preprocesses image for the Malaria (Keras-based ONNX) model."""
-    img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-    img = img.resize(target_size)
-    img_np = np.array(img).astype(np.float32) / 255.0
     img_np = np.expand_dims(img_np, axis=0)
     return img_np
 
@@ -182,19 +167,7 @@ def calculate_bmi(height_cm, weight_kg):
         return 0
     return weight_kg / ((height_cm / 100) ** 2)
 
-def get_age_category(age):
-    age = int(age)
-    if 18 <= age <= 24: return 'Young'
-    if 25 <= age <= 39: return 'Adult'
-    if 40 <= age <= 54: return 'Mid-Aged'
-    if 55 <= age <= 64: return 'Senior-Adult'
-    if age >= 65: return 'Elderly'
-    return 'Adult'
-
-# Feature preparation functions remain here, accessible to all pages:
-
 def prepare_diabetes_features(data):
-    # Uses the global scaler loaded in MODELS
     scaler = MODELS['diabetes_scaler']
     age = data.get('Age')
     weight = data.get('Weight')
@@ -204,6 +177,7 @@ def prepare_diabetes_features(data):
     pregnancies = data.get('Pregnancies', 0)
 
     bmi = calculate_bmi(height, weight)
+    # Default values for missing fields
     skin_thickness_default = 29.0
     insulin_default = 125.0 
     dpf_default = 0.3725
@@ -220,84 +194,125 @@ def prepare_diabetes_features(data):
 
     return scaler.transform(features)
 
-def prepare_heart_features(data):
-    # Uses the global scaler loaded in MODELS
-    scaler = MODELS['heart_scaler']
-    height = data.get('Height')
-    weight = data.get('Weight')
-    age = data.get('Age')
-    bmi = calculate_bmi(height, weight)
-    
-    # Mappings (unchanged)
-    general_health_map = {'Excellent': 0, 'Fair': 1, 'Good': 2, 'Poor': 3, 'Very Good': 4}
-    checkup_map = {'More than 5 years': 0, 'Never': 1, 'Past 1 year': 2, 'Past 2 years': 3, 'Past 5 years': 4}
-    binary_map = {'No': 0, 'Yes': 1} 
-    diabetes_map = {'No': 0, 'No Pre Diabetes': 1, 'Only during pregnancy': 2, 'Yes': 3}
-    age_category_map = {'Adult': 0, 'Elderly': 1, 'Mid-Aged': 2, 'Senior-Adult': 3, 'Young': 4}
-    bmi_group_map = {'Normal weight': 0, 'Obese I': 1, 'Obese II': 2, 'Overweight': 3, 'Underweight': 4}
+# System Prompt for the AI
+medical_prompt = """
+You are MedBot, a professional medical AI assistant. 
+Answer questions clearly and empathetically. 
+If a user asks about a specific medical test result (like "Diabetic"), explain what it means and suggest lifestyle changes.
+ALWAYS end with a disclaimer that you are an AI, not a doctor.
+"""
 
-    # BMI Group Calculation
-    bmi_bins = [12.02, 18.3, 26.85, 31.58, 37.8, 100]
-    bmi_labels = ['Underweight', 'Normal weight', 'Overweight', 'Obese I', 'Obese II']
-    try:
-        bmi_group_str = pd.cut([bmi], bins=bmi_bins, labels=bmi_labels, right=False)[0]
-    except ValueError:
-        bmi_group_str = 'Normal weight'
+# --- 5. PAGE CONTENT LOGIC ---
+
+# === SECTION 1: CHATBOT ===
+if selected == "AI Chatbot":
+    st.title("💬 Dr. AI Assistant")
+    st.caption("Ask general medical questions here.")
+
+    if "messages" not in st.session_state:
+        st.session_state.messages = [{"role": "assistant", "content": "Hello! How can I help you today?"}]
+
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])
+
+    if prompt := st.chat_input("Type your question..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
         
-    # Lifestyle Mappers
-    def map_smoking(val): return 1 if val in ['Former', 'Current'] else 0 
-    def map_alcohol(val):
-        if val == 'Never': return 0
-        if val == 'Occasionally': return 4
-        if val == 'Weekly': return 8
-        if val == 'Daily': return 30
-        return 0
-    def map_consumption(val):
-        if val == '0': return 0
-        if val == '1–2': return 12 
-        if val == '3–5': return 20 
-        if val == '6–7': return 30 
-        return 0
-    def map_fried(val):
-        if val == 'Rarely': return 2
-        if val == 'Weekly': return 4
-        if val == 'Several times per week': return 8
-        return 0
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                reply = ask_medbot(prompt, medical_prompt)
+                st.write(reply)
+                st.session_state.messages.append({"role": "assistant", "content": reply})
 
-    age_cat_str = get_age_category(age) 
+# === SECTION 2: DIABETES TEST ===
+elif selected == "Diabetes Test":
+    st.title("🩸 Diabetes Risk Assessment")
+    
+    st.markdown('<div class="css-card">', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        age = st.number_input("Age", 1, 120, 30)
+        pregnancies = st.number_input("Pregnancies", 0, 20, 0)
+        glucose = st.number_input("Glucose", 0, 500, 100)
+    with col2:
+        weight = st.number_input("Weight (kg)", 10, 300, 70)
+        height = st.number_input("Height (cm)", 50, 250, 170)
+        bp = st.number_input("Blood Pressure", 0, 200, 70)
+    with col3:
+        # BMI is calculated automatically in background
+        st.info("BMI will be calculated from Weight and Height.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Build feature dictionary in the correct final order
-    feature_dict = {
-        'general_health': general_health_map.get(data.get('General_Health')),
-        'checkup': checkup_map.get(data.get('Checkup')),
-        'exercise': binary_map.get(data.get('Exercise')), 
-        'skin_cancer': binary_map.get(data.get('Skin_Cancer')),
-        'other_cancer': binary_map.get(data.get('Other_Cancer')),
-        'depression': binary_map.get(data.get('Depression')),
-        'diabetes': diabetes_map.get(data.get('Diabetes')),
-        'arthritis': binary_map.get(data.get('Arthritis')),
-        'age_category': age_category_map.get(age_cat_str),
-        'height': height,
-        'weight': weight,
-        'bmi': bmi,
-        'alcohol_consumption': map_alcohol(data.get('Alcohol_Consumption')),
-        'fruit_consumption': map_consumption(data.get('Fruit_Consumption')),
-        'vegetables_consumption': map_consumption(data.get('Vegetables_Consumption')),
-        'potato_consumption': map_fried(data.get('FriedPotato_Consumption')),
-        'bmi_group': bmi_group_map.get(bmi_group_str),
-        'sex_Female': 1 if data.get('Sex') == 'Female' else 0,
-        'sex_Male': 1 if data.get('Sex') == 'Male' else 0,
-        'smoking_history_No': 1 if map_smoking(data.get('Smoking_History')) == 0 else 0,
-        'smoking_history_Yes': 1 if map_smoking(data.get('Smoking_History')) == 1 else 0,
-    }
+    if st.button("Analyze Result", type="primary"):
+        if MODELS and 'diabetes_model' in MODELS:
+            try:
+                # Prepare data dictionary
+                input_dict = {
+                    'Age': age, 'Weight': weight, 'Height': height,
+                    'BP': bp, 'Glucose': glucose, 'Pregnancies': pregnancies
+                }
+                
+                # Preprocess
+                final_features = prepare_diabetes_features(input_dict)
+                
+                # Predict
+                prediction = MODELS['diabetes_model'].predict(final_features)[0]
+                result_str = "Diabetic (High Risk)" if prediction == 1 else "Healthy (Low Risk)"
+                color = "#D32F2F" if prediction == 1 else "#388E3C"
+                
+                # Display
+                st.markdown(f"### Result: <span style='color:{color}'>{result_str}</span>", unsafe_allow_html=True)
+                
+                # AI Explanation
+                bmi = calculate_bmi(height, weight)
+                analysis_prompt = f"The patient has tested: {result_str}. Glucose: {glucose}, BMI: {bmi:.1f}, Age: {age}. Explain this result briefly."
+                ai_explanation = ask_medbot(analysis_prompt, medical_prompt)
+                st.info(f"👨‍⚕️ **Dr. AI Analysis:**\n\n{ai_explanation}")
+                
+            except Exception as e:
+                st.error(f"Prediction Error: {e}")
+        else:
+            st.warning("⚠️ Models not loaded. Check 'models/' folder.")
 
-    final_feature_order = [
-        'general_health', 'checkup', 'exercise', 'skin_cancer', 'other_cancer',
-        'depression', 'diabetes', 'arthritis', 'age_category', 'height', 'weight',
-        'bmi', 'alcohol_consumption', 'fruit_consumption', 'vegetables_consumption',
-        'potato_consumption', 'bmi_group', 'sex_Female', 'sex_Male',
-        'smoking_history_No', 'smoking_history_Yes'
-    ]
+# === SECTION 3: PNEUMONIA CHECK ===
+elif selected == "Pneumonia Check":
+    st.title("🫁 Pneumonia X-Ray Check")
+    
+    st.markdown('<div class="css-card">', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Upload Chest X-Ray", type=["jpg", "png", "jpeg"])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    features = pd.DataFrame([feature_dict], columns=final_feature_order)
-    return scaler.transform(features)
+    if uploaded_file and MODELS:
+        st.image(uploaded_file, width=300)
+        if st.button("Analyze Image"):
+            try:
+                # Read file
+                image_bytes = uploaded_file.read()
+                
+                # Preprocess for ONNX
+                img_input = process_image_yolo(image_bytes)
+                
+                # Run Inference
+                input_name = MODELS['pneumonia_input_name']
+                output_name = MODELS['pneumonia_output_name']
+                result = MODELS['pneumonia_session'].run([output_name], {input_name: img_input})
+                
+                # Process Result (Assuming classification output)
+                # Note: You might need to adjust this depending on exact YOLO output format
+                # This is a generic handler for classification
+                prediction_idx = np.argmax(result[0])
+                classes = MODELS['pneumonia_classes']
+                final_result = classes[prediction_idx] if prediction_idx < len(classes) else "Unknown"
+                
+                st.markdown(f"### Result: **{final_result}**")
+                
+                # AI Explanation
+                ai_explanation = ask_medbot(f"X-Ray result shows: {final_result}. Explain what this means.", medical_prompt)
+                st.info(f"👨‍⚕️ **Dr. AI Analysis:**\n\n{ai_explanation}")
+
+            except Exception as e:
+                st.error(f"Image Analysis Error: {e}")
