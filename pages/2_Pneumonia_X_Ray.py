@@ -1,16 +1,16 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-from utils import load_css, load_all_models, process_image as process_image_yolo, ask_medbot, MEDICAL_PROMPT
-
+from utils import load_css, load_all_models, process_image, ask_medbot, MEDICAL_PROMPT
 
 # --- 1. Page Config ---
 st.set_page_config(page_title="Pneumonia Check", page_icon="🫁", layout="wide")
 load_css() # Loads the Blue/White Theme
 
 # --- 2. Navigation ---
+# Note: Ensure your main file is named 'app.py'. If it is 'streamlit_app.py', keep your change.
 if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("streamlit_app.py")
+    st.switch_page("app.py") 
 
 # --- 3. Load Models ---
 MODELS = load_all_models()
@@ -18,7 +18,7 @@ MODELS = load_all_models()
 st.title("🫁 Pneumonia X-Ray Check")
 st.markdown("Upload a chest X-Ray image to detect Pneumonia or Normal conditions.")
 
-# --- 4. Input Section (The "Card" Look) ---
+# --- 4. Input Section ---
 st.markdown('<div class="css-card">', unsafe_allow_html=True)
 col1, col2 = st.columns([1, 2])
 
@@ -44,6 +44,7 @@ if uploaded_file:
                 with st.spinner("Analyzing lung patterns..."):
                     # 1. Preprocess
                     image_bytes = uploaded_file.read()
+                    # We use process_image from utils
                     img_input = process_image(image_bytes)
                     
                     # 2. Inference (ONNX)
@@ -67,4 +68,22 @@ if uploaded_file:
 
                     # 4. Color Logic (Green for Normal, Red for Disease)
                     if "Normal" in final_result:
-                        color = "#388E3C"
+                        color = "#388E3C" # Green
+                        result_text = "Normal (Healthy)"
+                    else:
+                        color = "#D32F2F" # Red
+                        result_text = final_result
+
+                    # 5. Display Result
+                    st.markdown(f"### Result: <span style='color:{color}'>{result_text}</span>", unsafe_allow_html=True)
+                    
+                    # 6. AI Explanation
+                    ai_prompt = f"Chest X-Ray analysis result: {result_text}. Explain this medical condition briefly."
+                    explanation = ask_medbot(ai_prompt, MEDICAL_PROMPT)
+                    
+                    st.info(f"👨‍⚕️ **Dr. AI Analysis:**\n\n{explanation}")
+
+            except Exception as e:
+                st.error(f"Analysis Error: {e}")
+        else:
+            st.warning("⚠️ Pneumonia model not loaded. Check 'models/best.onnx'.")
