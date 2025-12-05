@@ -47,7 +47,7 @@ with c3:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Row 2 (Added Heart and Malaria)
-c4, c5, c6 = st.columns([1, 1, 1])
+c4, c5 = st.columns([1, 1])
 
 # Heart Disease Card (New)
 with c4:
