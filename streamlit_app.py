@@ -6,6 +6,8 @@ import joblib
 import numpy as np
 from PIL import Image
 import os
+import onnxruntime as ort
+import io
 
 # --- 1. PAGE CONFIGURATION & STYLING ---
 st.set_page_config(
