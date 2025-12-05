@@ -20,46 +20,113 @@ If a user asks about a specific medical test result, explain what it means.
 ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
-# --- 2. STYLING (CSS) ---
+# --- 2. STYLING (THE NEW THEME) ---
 def load_css():
     st.markdown("""
         <style>
+        /* Import Inter Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        /* 1. Global Settings */
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Main Background (Light Blue Gradient) */
+        .stApp {
+            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
+            background-attachment: fixed;
+        }
+
+        /* Sidebar Styling (Glass Effect) */
+        section[data-testid="stSidebar"] {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-right: 1px solid rgba(13, 71, 161, 0.1);
+        }
+
         /* Hide Default Streamlit Elements */
         #MainMenu {visibility: hidden;}
-       /* footer {visibility: hidden;}*/
-       /* header {visibility: hidden;}*/
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
         div[data-testid="stSidebarNav"] {display: none;}
-        
-        /* Medical Blue Theme */
-        .stApp { background-color: #FAFAFA; }
-        
-        /* Card Styling */
+
+        /* 2. Glass Card Container (Replacing css-card) */
         .css-card {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            border-left: 6px solid #0277BD;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(13, 71, 161, 0.3);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(13, 71, 161, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* Buttons */
+        .css-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 35px 70px rgba(13, 71, 161, 0.3);
+        }
+
+        /* 3. Modern Buttons */
         div.stButton > button {
-            background-color: #0277BD;
-            color: white;
-            border-radius: 8px;
-            border: none;
+            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 35px !important;
+            padding: 15px 30px !important;
+            font-weight: 600 !important;
+            font-size: 1.1rem !important;
+            box-shadow: 0 10px 30px rgba(13, 71, 161, 0.3) !important;
+            transition: all 0.3s ease !important;
             width: 100%;
-            padding: 12px;
-            font-weight: bold;
         }
+
         div.stButton > button:hover {
-            background-color: #01579B;
-            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(13, 71, 161, 0.5) !important;
+        }
+
+        /* 4. Typography & Titles */
+        h1, h2, h3 {
+            color: #0d47a1 !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        /* Titles */
-        h1, h2, h3 { color: #0277BD; font-family: 'Arial', sans-serif; }
+        p, label, .stMarkdown {
+            color: #0d47a1 !important;
+            font-size: 1.05rem;
+        }
+
+        /* 5. Input Fields Styling (To match form-control) */
+        .stTextInput input, .stNumberInput input, .stSelectbox div[data-baseweb="select"] {
+            border-radius: 15px !important;
+            border: 2px solid rgba(13, 71, 161, 0.3) !important;
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            color: #0d47a1 !important;
+            padding: 10px !important;
+        }
+        
+        /* Focus state for inputs */
+        .stTextInput input:focus, .stNumberInput input:focus {
+            border-color: #0d47a1 !important;
+            box-shadow: 0 0 0 0.2rem rgba(13, 71, 161, 0.15) !important;
+        }
+
+        /* 6. Success/Error Messages */
+        .stSuccess {
+            background-color: rgba(56, 142, 60, 0.1) !important;
+            border: 1px solid #388e3c !important;
+            color: #388e3c !important;
+            border-radius: 15px !important;
+        }
+        
+        .stError {
+            background-color: rgba(211, 47, 47, 0.1) !important;
+            border: 1px solid #d32f2f !important;
+            color: #d32f2f !important;
+            border-radius: 15px !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -113,7 +180,7 @@ def load_all_models():
             "diabetes_scaler": d_scaler,
             "heart_model": heart,
             "heart_scaler": h_scaler,
-            # Helper keys for ONNX input/output names if models exist
+            # Helper keys for ONNX input/output names
             "pneu_in": pneumonia.get_inputs()[0].name if pneumonia else None,
             "pneu_out": pneumonia.get_outputs()[0].name if pneumonia else None,
             "mal_in": malaria.get_inputs()[0].name if malaria else None,
@@ -128,7 +195,7 @@ MODELS = load_all_models()
 # --- 5. PREPROCESSING FUNCTIONS ---
 
 def process_image(image_bytes, target_size=(224, 224)):
-    """Generic image preprocessing for ONNX models (Resize -> Norm -> Transpose -> Batch)"""
+    """Generic image preprocessing for ONNX models"""
     img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     img = img.resize(target_size)
     img_np = np.array(img).astype(np.float32) / 255.0
@@ -173,7 +240,6 @@ def prepare_heart_features(data):
     age_category_map = {'Adult': 0, 'Elderly': 1, 'Mid-Aged': 2, 'Senior-Adult': 3, 'Young': 4}
     bmi_group_map = {'Normal weight': 0, 'Obese I': 1, 'Obese II': 2, 'Overweight': 3, 'Underweight': 4}
 
-    # BMI Group Calculation
     bmi_bins = [12.02, 18.3, 26.85, 31.58, 37.8, 100]
     bmi_labels = ['Underweight', 'Normal weight', 'Overweight', 'Obese I', 'Obese II']
     try:
@@ -181,7 +247,6 @@ def prepare_heart_features(data):
     except:
         bmi_group_str = 'Normal weight'
 
-    # Lifestyle Mappers
     def map_smoking(val): return 1 if val in ['Former', 'Current'] else 0 
     def map_alcohol(val):
         if val == 'Never': return 0
