@@ -6,7 +6,7 @@ load_css()
 
 # Sidebar Navigation (Back to Home)
 if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("app.py")
+    st.switch_page("streamlit_app.py")
 
 st.title("💬 Chat with Doctory")
 
