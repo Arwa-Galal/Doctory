@@ -10,7 +10,7 @@ import io
 import os
 
 # --- 1. CONFIGURATION ---
-API_KEY = "AIzaSyBxYCfAwsyhbhiA8EQd6dcn-RdsZQ9xtZ8"
+API_KEY = "AIzaSyCHBjZJiBE4rtDS4daTaq32yY4gBWmR7rA"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={API_KEY}"
 
 MEDICAL_PROMPT = """
