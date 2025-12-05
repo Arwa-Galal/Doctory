@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-from utils import load_css, load_all_models, process_image, ask_medbot, MEDICAL_PROMPT
+from utils import load_css, load_all_models, process_image as process_image_yolo, ask_medbot, MEDICAL_PROMPT
+
 
 # --- 1. Page Config ---
 st.set_page_config(page_title="Pneumonia Check", page_icon="🫁", layout="wide")
