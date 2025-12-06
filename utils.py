@@ -26,53 +26,63 @@ ALWAYS end with a disclaimer that you are an AI, not a doctor.
 def load_css():
     st.markdown("""
         <style>
-        /* Import Inter Font */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
-        /* Background */
+        /* الخلفية */
         .stApp {
             background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
             background-attachment: fixed;
         }
 
-        /* Hide Default Sidebar Navigation (الملفات القديمة) */
-        div[data-testid="stSidebarNav"] {display: none;}
-
-        /* Card Styling */
+        /* تنسيق الكارت (مع تجهيز الحركة) */
         .css-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 20px;
-            border-left: 6px solid #0277BD; /* Medical Blue */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-left: 8px solid #0277BD;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            
+            /* هذا السطر هو سر النعومة في الحركة */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* Blue Buttons */
+        /* --- حركة الكارت عند مرور الماوس (HOVER EFFECT) --- */
+        .css-card:hover {
+            transform: translateY(-10px); /* يرفع الكارت لأعلى 10 بيكسل */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); /* يزيد الظل ليبدو وكأنه يطير */
+            border-left: 8px solid #01579B; /* يغمق لون الخط الجانبي */
+        }
+
+        /* باقي التنسيقات (إخفاء القوائم وتنسيق الأزرار) */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        div[data-testid="stSidebarNav"] {display: none;}
+        .block-container { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+
         div.stButton > button {
-            background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%) !important;
+            background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
             color: white !important;
-            border-radius: 12px;
+            border-radius: 10px;
             border: none;
-            padding: 12px 24px;
+            padding: 12px;
             font-weight: bold;
             width: 100%;
             transition: all 0.3s ease;
         }
+        
+        /* حركة الزر أيضاً */
         div.stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(13, 71, 161, 0.3);
+            transform: scale(1.05); /* يكبر الزر قليلاً */
+            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
         }
         
-        /* Titles */
-        h1, h2, h3 { color: #0d47a1 !important; font-weight: 800; }
-        p, label, li { color: #0d47a1 !important; font-weight: 500; }
+        h1, h2, h3 { color: #01579B !important; font-weight: 800; text-align: center;}
+        p, label, li { color: #0277BD !important; font-weight: 500; }
         </style>
     """, unsafe_allow_html=True)
-
 # --- 3. CUSTOM SIDEBAR NAVIGATION (THE BLUE MENU) ---
 def render_sidebar():
     with st.sidebar:
