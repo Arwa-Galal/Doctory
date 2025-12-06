@@ -7,7 +7,6 @@ load_css()
 # --- HERO SECTION ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.image("https://e7.pngegg.com/pngimages/781/277/png-clipart-health-care-computer-icons-surgery-home-care-service-urgent-care-love-blue-thumbnail.png", width=120)
     st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Doctory AI</h1>", unsafe_allow_html=True)
     st.markdown("<h4 style='text-align: center; color: #555;'>Your Intelligent Medical Companion</h4>", unsafe_allow_html=True)
     st.markdown("---")
@@ -20,7 +19,7 @@ st.write("") # Spacer
 c1, c2, c3 = st.columns([1, 1, 1])
 
 with c1:
-    st.markdown('<div class="css-card">', unsafe_allow_html=True)
+ #   st.markdown('<div class="css-card">', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=60)
     st.subheader("AI Doctor")
     st.caption("Chat with our smart assistant.")
