@@ -7,7 +7,7 @@ load_css()
 # --- HERO SECTION ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.image("<i class="fas fa-heartbeat icon"></i>Diabetes Prediction", width=120)
+    st.image("<i class="fas fa-heartbeat icon"></i>", width=120)
     st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Doctory AI</h1>", unsafe_allow_html=True)
     st.markdown("<h4 style='text-align: center; color: #555;'>Your Intelligent Medical Companion</h4>", unsafe_allow_html=True)
     st.markdown("---")
