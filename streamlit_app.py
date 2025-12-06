@@ -19,7 +19,7 @@ st.write("") # Spacer
 c1, c2, c3 = st.columns([1, 1, 1])
 
 with c1:
- #   st.markdown('<div class="css-card">', unsafe_allow_html=True)
+    st.markdown('<div class="css-card">', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=60)
     st.subheader("AI Doctor")
     st.caption("Chat with our smart assistant.")
