@@ -29,58 +29,68 @@ def load_css():
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
-        /* الخلفية */
         .stApp {
             background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
             background-attachment: fixed;
         }
-
-        /* تنسيق الكارت (مع تجهيز الحركة) */
-        .css-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 20px;
-            border-left: 8px solid #0277BD;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            
-            /* هذا السطر هو سر النعومة في الحركة */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
         
-        /* --- حركة الكارت عند مرور الماوس (HOVER EFFECT) --- */
-        .css-card:hover {
-            transform: translateY(-10px); /* يرفع الكارت لأعلى 10 بيكسل */
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); /* يزيد الظل ليبدو وكأنه يطير */
-            border-left: 8px solid #01579B; /* يغمق لون الخط الجانبي */
+        .block-container {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
         }
 
-        /* باقي التنسيقات (إخفاء القوائم وتنسيق الأزرار) */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         div[data-testid="stSidebarNav"] {display: none;}
-        .block-container { padding-top: 2rem !important; padding-bottom: 2rem !important; }
 
+        /* تنسيق الكارت */
+        .css-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 15px; /* مسافة صغيرة بين الكارت والزر */
+            border-left: 8px solid #0277BD;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center; /* توسيط المحتوى */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .css-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        /* تنسيق الصور داخل الكارت */
+        .css-card img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 60px;
+            margin-bottom: 15px;
+        }
+
+        /* تنسيق النصوص داخل الكارت */
+        .css-card h3 { color: #01579B; margin: 0; font-size: 1.3rem; font-weight: 800; }
+        .css-card p { color: #555; margin: 5px 0 0 0; font-size: 0.9rem; }
+
+        /* الأزرار */
         div.stButton > button {
             background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
             color: white !important;
-            border-radius: 10px;
+            border-radius: 12px;
             border: none;
-            padding: 12px;
+            padding: 10px;
             font-weight: bold;
             width: 100%;
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
-        /* حركة الزر أيضاً */
         div.stButton > button:hover {
-            transform: scale(1.05); /* يكبر الزر قليلاً */
-            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(2, 119, 189, 0.3);
         }
         
-        h1, h2, h3 { color: #01579B !important; font-weight: 800; text-align: center;}
-        p, label, li { color: #0277BD !important; font-weight: 500; }
+        h1, h2 { color: #01579B !important; font-weight: 800; text-align: center;}
         </style>
     """, unsafe_allow_html=True)
 # --- 3. CUSTOM SIDEBAR NAVIGATION (THE BLUE MENU) ---
