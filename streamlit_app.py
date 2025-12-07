@@ -23,7 +23,7 @@ st.write("")
 col1, col2 = st.columns(2)
 
 with col1:
-    with st.container(border=True):
+    with st.button(border=True):
         st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=60)
         st.markdown("<h3>AI Doctor</h3>", unsafe_allow_html=True)
         st.markdown("<p>Chat with our smart assistant.</p>", unsafe_allow_html=True)
