@@ -2,15 +2,12 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import io
-from utils import load_css, load_all_models, ask_medbot, MEDICAL_PROMPT
+from utils import load_css, load_all_models, ask_medbot, MEDICAL_PROMPT, render_sidebar
 
 # --- 1. Page Config ---
 st.set_page_config(page_title="Malaria Check", page_icon="🦟", layout="wide")
 load_css() # Loads the Blue/White Theme
-
-# --- 2. Navigation ---
-if st.sidebar.button(" Back to Home"):
-    st.switch_page("streamlit_app.py")
+render_sidebar("Malaria")
 
 # --- 3. Load Models ---
 MODELS = load_all_models()
