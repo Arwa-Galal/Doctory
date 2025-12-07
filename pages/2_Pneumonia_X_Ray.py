@@ -19,13 +19,11 @@ st.title("🫁 Pneumonia X-Ray Check")
 st.markdown("Upload a chest X-Ray image to detect Pneumonia or Normal conditions.")
 
 # --- 4. Input Section ---
+# --- 5. Input Section (Medical Blue Card) ---
 st.markdown('<div class="css-card">', unsafe_allow_html=True)
-col1, col2 = st.columns([1, 2])
+col1, col2, col3 = st.columns([1, 2, 1])
 
-with col1:
-    st.info("Supported formats: JPEG, PNG")
-    
-with col2:
+with col2:  # Centered column
     uploaded_file = st.file_uploader("Upload Chest X-Ray", type=["jpg", "png", "jpeg"])
 
 st.markdown('</div>', unsafe_allow_html=True)
