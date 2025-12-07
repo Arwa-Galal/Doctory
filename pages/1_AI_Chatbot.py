@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import ask_medbot, load_css, MEDICAL_PROMPT
+from utils import ask_medbot, load_css, MEDICAL_PROMPT, render_sidebar
 
 st.set_page_config(page_title="Chat", page_icon="💬", layout="wide")
 load_css()
