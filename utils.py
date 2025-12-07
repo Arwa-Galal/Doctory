@@ -29,7 +29,7 @@ def load_css():
         
         /* 1. خلفية زرقاء فاتحة لكامل التطبيق */
         .stApp {
-            background: linear-gradient(135deg, #E3F2FD 5%, #BBDEFB 100%) !important;
+            background: linear-gradient(135deg, #0277BD 5%, #BBDEFB 100%) !important;
             background-attachment: fixed;
         }
 
