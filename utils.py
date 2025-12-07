@@ -20,73 +20,66 @@ Answer questions clearly and empathetically.
 ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
-# --- CSS STYLING (THE POWERFUL FIX) ---
+# --- CSS STYLING (BUTTON AS CARD) ---
 def load_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
-        /* 1. خلفية زرقاء فاتحة لكامل التطبيق */
+        /* 1. Background */
         .stApp {
-            background: linear-gradient(135deg, #0277BD 5%, #BBDEFB 100%) !important;
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%) !important;
             background-attachment: fixed;
         }
 
-        /* 2. إخفاء القوائم الافتراضية */
+        /* 2. Remove Extra Spacing */
+        .block-container {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+        }
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         div[data-testid="stSidebarNav"] {display: none;}
-        .block-container { padding-top: 2rem !important; }
 
-        /* --- 3. تصميم الكارت (الجزء المهم) --- */
-        /* نستهدف أي حاوية (Container) لها إطار */
-        [data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF !important; /* يجبر الخلفية تكون بيضاء */
-            border: 1px solid #CCCCCC !important; /* حدود رمادية */
-            border-left: 8px solid #0277BD !important; /* الخط الأزرق السميك */
-            border-radius: 15px !important;
-            padding: 20px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
-            transition: all 0.3s ease-in-out !important; /* نعومة الحركة */
-        }
-
-        /* عند مرور الماوس (Hover) */
-        [data-testid="stVerticalBlockBorderWrapper"]:hover {
-            transform: translateY(-10px) !important; /* يرفع الكارت لأعلى */
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important; /* ظل كبير */
-            border-color: #0277BD !important; /* يجعل الحدود زرقاء */
-        }
-
-        /* 4. إجبار النصوص داخل الكارت أن تكون ملونة */
-        [data-testid="stVerticalBlockBorderWrapper"] h1, 
-        [data-testid="stVerticalBlockBorderWrapper"] h2, 
-        [data-testid="stVerticalBlockBorderWrapper"] h3 {
-            color: #01579B !important;
-        }
-        [data-testid="stVerticalBlockBorderWrapper"] p {
-            color: #424242 !important;
-        }
-
-        /* 5. تصميم الأزرار */
+        /* --- 3. تحويل الأزرار إلى كروت بيضاء --- */
         div.stButton > button {
-            background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 10px 20px !important;
-            width: 100% !important;
-            font-weight: bold !important;
+            background-color: #FFFFFF !important; /* لون أبيض للكارت */
+            color: #0277BD !important; /* لون الكتابة أزرق */
+            border: 1px solid #d1d5db !important;
+            border-left: 8px solid #0277BD !important; /* الخط الأزرق الجانبي */
+            border-radius: 15px !important;
+            padding: 20px 10px !important; /* تكبير الحجم */
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            width: 100%;
+            height: 100%;
+            transition: all 0.3s ease-in-out !important;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            white-space: pre-wrap; /* يسمح بالنزول سطر جديد داخل الزر */
         }
+
+        /* تأثير الطفو عند المرور على الزر */
         div.stButton > button:hover {
-            transform: scale(1.05) !important;
-            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4) !important;
+            transform: translateY(-8px) !important;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+            border-color: #01579B !important;
+            background-color: #F8F9FA !important;
         }
         
-        /* 6. توسيط الصور */
-        div[data-testid="stImage"] { display: flex; justify-content: center; }
-        div[data-testid="stImage"] > img { width: 80px !important; }
+        /* 4. Text & Images */
+        h1, h2, h3 { color: #01579B !important; text-align: center; font-weight: 800; }
+        p { color: #424242 !important; text-align: center; font-weight: 500; }
+        
+        /* Center Images */
+        div[data-testid="stImage"] { display: flex; justify-content: center; margin-bottom: -10px; z-index: 1;}
+        div[data-testid="stImage"] > img { width: 70px !important; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -110,7 +103,6 @@ def render_sidebar(current_page):
                 "nav-link-selected": {"background-color": "#0277BD", "color": "white"},
             }
         )
-        
         if selected != current_page:
             if selected == "Home": st.switch_page("streamlit_app.py")
             if selected == "AI Chat": st.switch_page("pages/1_AI_Chatbot.py")
