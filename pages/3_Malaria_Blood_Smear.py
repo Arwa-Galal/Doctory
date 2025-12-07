@@ -9,7 +9,7 @@ st.set_page_config(page_title="Malaria Check", page_icon="🦟", layout="wide")
 load_css() # Loads the Blue/White Theme
 
 # --- 2. Navigation ---
-if st.button(" Back to Home"):
+if st.sidebar.button("🏠 Back to Home"):
     st.switch_page("streamlit_app.py")
 
 # --- 3. Load Models ---
