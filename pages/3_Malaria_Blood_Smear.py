@@ -9,7 +9,7 @@ st.set_page_config(page_title="Malaria Check", page_icon="🦟", layout="wide")
 load_css() # Loads the Blue/White Theme
 
 # --- 2. Navigation ---
-if st.sidebar.button("🏠 Back to Home"):
+if st.sidebar.button(" Back to Home"):
     st.switch_page("streamlit_app.py")
 
 # --- 3. Load Models ---
@@ -31,14 +31,11 @@ def process_malaria_image(image_bytes):
     return img_np
 
 # --- 5. Input Section (Medical Blue Card) ---
+# --- 5. Input Section (Medical Blue Card) ---
 st.markdown('<div class="css-card">', unsafe_allow_html=True)
-col1 = st.columns([1])
+col1, col2, col3 = st.columns([1, 2, 1])
 
-"""with col1:
-    st.info("Supported formats: JPEG, PNG")
-    st.caption("Please upload a cropped image of a single cell.")"""
-    
-with col1:
+with col2:  # Centered column
     uploaded_file = st.file_uploader("Upload Cell Image", type=["jpg", "png", "jpeg"])
 
 st.markdown('</div>', unsafe_allow_html=True)
