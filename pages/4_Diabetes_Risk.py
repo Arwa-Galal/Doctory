@@ -4,7 +4,7 @@ from utils import load_css, load_all_models, prepare_diabetes_features, calculat
 st.set_page_config(page_title="Diabetes", page_icon="🩸", layout="wide")
 load_css()
 MODELS = load_all_models()
-render_sidebar('Diabetes")
+render_sidebar("Diabetes")
 
 st.title("🩸 Diabetes Risk Assessment")
 
