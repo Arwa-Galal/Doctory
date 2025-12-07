@@ -92,28 +92,28 @@ def load_css():
         div[data-testid="stImage"] > img { width: 80px !important; }
         /* Chat Message Styling - Bigger Font */
 [data-testid="stChatMessage"] {
-    font-size: 18px !important; /* Increase from default ~14px */
+    font-size: 22px !important; /* Increase from default ~14px */
 }
 
 /* Chat Input Box - Bigger Font */
 [data-testid="stChatInput"] textarea {
-    font-size: 16px !important;
+    font-size: 18px !important;
 }
 
 /* Make chat message content more readable */
 [data-testid="stChatMessage"] p {
-    font-size: 18px !important;
+    font-size: 22px !important;
     line-height: 1.6 !important;
 }
 
 /* User messages */
 [data-testid="stChatMessage"][data-testid*="user"] {
-    font-size: 18px !important;
+    font-size: 22px !important;
 }
 
 /* Assistant messages */
 [data-testid="stChatMessage"][data-testid*="assistant"] {
-    font-size: 18px !important;
+    font-size: 22px !important;
 }
         </style>
     """, unsafe_allow_html=True)
