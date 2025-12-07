@@ -17,72 +17,58 @@ API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-f
 MEDICAL_PROMPT = """
 You are MedBot, a professional medical AI assistant. 
 Answer questions clearly and empathetically. 
-If a user asks about a specific medical test result, explain what it means.
 ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
-# --- CSS STYLING (SOLID WHITE CARDS) ---
+# --- CSS STYLING (THE WHITE CARD THEME) ---
 def load_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
-        /* 1. Background */
         .stApp {
             background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
             background-attachment: fixed;
         }
-
-        /* 2. Hide Default Elements */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        div[data-testid="stSidebarNav"] {display: none;}
         
-        /* 3. Remove Top Spacing */
+        /* Remove top spacing */
         .block-container {
             padding-top: 2rem !important;
             padding-bottom: 2rem !important;
         }
 
-        /* --- 4. THE CARD STYLE (SOLID WHITE) --- */
-        /* This targets st.container(border=True) */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        div[data-testid="stSidebarNav"] {display: none;}
+
+        /* --- MAGIC CARD STYLING --- */
+        /* هذا الجزء يحول الحاويات إلى كروت بيضاء */
         div[data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF !important; /* لون أبيض ناصع إجباري */
-            border: 1px solid #d1d5db !important; /* حدود رمادية واضحة */
-            border-radius: 15px !important;
+            background-color: #FFFFFF !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 20px !important;
             padding: 20px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-            border-left: 8px solid #0277BD !important; /* الخط الأزرق الجانبي */
-            margin-bottom: 20px !important;
-            transition: all 0.3s ease-in-out !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            border-left: 8px solid #0277BD !important;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
         }
 
-        /* Floating Effect on Hover */
+        /* تأثير الطفو عند اللمس */
         div[data-testid="stVerticalBlockBorderWrapper"]:hover {
             transform: translateY(-8px) !important;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
             border-color: #0277BD !important;
         }
         
-        /* ALSO Apply to manual .css-card just in case */
-        .css-card {
-            background-color: #FFFFFF !important;
-            border-radius: 15px;
-            padding: 25px;
-            border-left: 8px solid #0277BD;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        /* 5. Buttons */
+        /* Buttons */
         div.stButton > button {
             background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
             color: white !important;
-            border-radius: 8px;
+            border-radius: 10px;
             border: none;
-            padding: 12px;
+            padding: 10px 20px;
             font-weight: bold;
             width: 100%;
             margin-top: 10px;
@@ -92,25 +78,21 @@ def load_css():
             box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
         }
         
-        /* 6. Text Styling */
-        h1, h2, h3 { color: #01579B !important; font-weight: 800; text-align: center; }
-        p { color: #374151 !important; font-weight: 500; text-align: center; }
-        
-        /* Center Images */
+        h1, h2, h3 { color: #01579B !important; font-weight: 800; text-align: center;}
+        p { color: #424242 !important; font-weight: 500; text-align: center; }
         div[data-testid="stImage"] { display: block; margin-left: auto; margin-right: auto; }
         div[data-testid="stImage"] > img { display: block; margin-left: auto; margin-right: auto; }
         </style>
     """, unsafe_allow_html=True)
 
-# --- SIDEBAR NAVIGATION ---
+# --- NAVIGATION ---
 def render_sidebar(current_page):
     with st.sidebar:
         st.markdown("<h2 style='text-align: center; color: #0277BD;'>Doctory AI</h2>", unsafe_allow_html=True)
-        
         options = ["Home", "AI Chat", "Pneumonia", "Malaria", "Diabetes", "Heart Risk"]
         try: index = options.index(current_page)
-        except ValueError: index = 0
-
+        except: index = 0
+        
         selected = option_menu(
             menu_title=None,
             options=options,
