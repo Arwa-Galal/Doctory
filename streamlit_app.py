@@ -19,14 +19,11 @@ st.write("") # Spacer
 c1, c2, c3 = st.columns([1, 1, 1])
 
 with c1:
-st.markdown("""
-    <div class="css-card">
-        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png">
-        <h3>AI Doctor</h3>
-        <p>Chat with our smart assistant.</p>
-    
-    """)
-    if st.button("Start Chat"):
+with st.container(border=True):
+        st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=60)
+        st.markdown("<h3>AI Doctor</h3>", unsafe_allow_html=True)
+        st.markdown("<p>Chat with our smart assistant.</p>", unsafe_allow_html=True)
+        if st.button("Start Chat"):
         # تأكدي أن اسم الملف في فولدر pages هو 1_💬_Chat_With_Doctory.py
         st.switch_page("pages/1_AI_Chatbot.py")
     st.markdown('</div>', unsafe_allow_html=True)
