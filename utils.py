@@ -35,8 +35,8 @@ def load_css():
 
         /* 2. إخفاء القوائم الافتراضية */
         #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
+        /*footer {visibility: hidden;}*/
+       /* header {visibility: hidden;}*/
         div[data-testid="stSidebarNav"] {display: none;}
         .block-container { padding-top: 2rem !important; }
 
@@ -120,7 +120,7 @@ def render_sidebar(current_page):
             if selected == "Pneumonia": st.switch_page("pages/2_Pneumonia_X_Ray.py")
             if selected == "Malaria": st.switch_page("pages/3_Malaria_Blood_Smear.py")
             if selected == "Diabetes": st.switch_page("pages/4_Diabetes_Risk.py")
-            if selected == "Heart Risk": st.switch_page("pages/5_❤️_Heart_Risk.py")
+            if selected == "Heart Risk": st.switch_page("pages/5_Heart_Disease_Risk.py")
 
 # --- MODEL LOADING ---
 @st.cache_resource
