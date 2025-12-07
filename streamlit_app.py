@@ -24,7 +24,10 @@ col1, col2 = st.columns(2)
 with col1:
     with st.container(border=True):
         st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=60)
-        if st.button("AI Doctor\nChat with our smart assistant", key="btn_chat"):
+        st.markdown("<h3>AI Doctor</h3>", unsafe_allow_html=True)
+        st.markdown("<p>Chat with our smart assistant.</p>", unsafe_allow_html=True)
+        # الزر هو الوسيلة الوحيدة للتفاعل
+        if st.button("Start Chat"):
             st.switch_page("pages/1_AI_Chatbot.py")
 
 with col2:
@@ -61,4 +64,4 @@ with col6:
         st.markdown("<h3>Heart Disease</h3>", unsafe_allow_html=True)
         st.markdown("<p>Assess cardiovascular risk.</p>", unsafe_allow_html=True)
         if st.button("Check Heart"):
-            st.switch_page("pages/5_❤️_Heart_Risk.py")
+            st.switch_page("pages/5_Heart_Disease_Risk.py")
