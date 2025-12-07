@@ -35,7 +35,7 @@ def load_css():
 
         /* 2. إخفاء القوائم الافتراضية */
         #MainMenu {visibility: hidden;}
-        /*footer {visibility: hidden;}*/
+        footer {visibility: hidden;}
        /* header {visibility: hidden;}*/
         div[data-testid="stSidebarNav"] {display: none;}
         .block-container { padding-top: 2rem !important; }
