@@ -123,7 +123,7 @@ with st.form("heart_form"):
     
     # COLUMN 1: Basic Biometrics
     with col1:
-        st.markdown("### 👤 Biometrics")
+        st.markdown("###  Biometrics")
         age = st.number_input("Age (Years)", min_value=18, max_value=120, value=45)
         sex = st.selectbox("Sex", ['Female', 'Male'])
         height = st.number_input("Height (cm)", min_value=100.0, max_value=250.0, value=170.0, format="%.1f")
@@ -131,7 +131,7 @@ with st.form("heart_form"):
 
     # COLUMN 2: Medical History
     with col2:
-        st.markdown("### 🏥 Health History")
+        st.markdown("###  Health History")
         general_health = st.selectbox("General Health Status", ['Very Good', 'Good', 'Fair', 'Poor', 'Excellent'])
         checkup = st.selectbox("Last Health Checkup", ['Past 1 year', 'Past 2 years', 'Past 5 years', 'More than 5 years', 'Never'])
         diabetes = st.selectbox("Diabetes Status", ['No', 'No Pre Diabetes', 'Only during pregnancy', 'Yes'])
@@ -140,7 +140,7 @@ with st.form("heart_form"):
 
     # COLUMN 3: Lifestyle
     with col3:
-        st.markdown("### 🥗 Lifestyle")
+        st.markdown("###  Lifestyle")
         smoking = st.selectbox("Smoking History", ['Never', 'Former', 'Current'])
         exercise = st.selectbox("Any physical exercise in past 30 days?", ['No', 'Yes'])
         alcohol = st.selectbox("Avg. Alcoholic drinks per day", ['Never', 'Occasionally', 'Weekly', 'Daily'], index=0)
