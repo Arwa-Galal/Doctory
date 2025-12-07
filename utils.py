@@ -21,67 +21,73 @@ ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
 # --- CSS STYLING (THE WHITE CARD THEME) ---
+# --- CSS STYLING (Universal Fix) ---
 def load_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
+        /* 1. FORCE Background Color (عشان الأبيض يبان) */
         .stApp {
-            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
-            background-attachment: fixed;
-        }
-        
-        /* Remove top spacing */
-        .block-container {
-            padding-top: 2rem !important;
-            padding-bottom: 2rem !important;
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%) !important;
+            background-attachment: fixed !important;
         }
 
+        /* 2. Hide Default Elements */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         div[data-testid="stSidebarNav"] {display: none;}
-
-        /* --- MAGIC CARD STYLING --- */
-        /* هذا الجزء يحول الحاويات إلى كروت بيضاء */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF !important;
-            border: 1px solid #e0e0e0 !important;
-            border-radius: 20px !important;
-            padding: 20px !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            border-left: 8px solid #0277BD !important;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        
+        /* 3. Fix Spacing */
+        .block-container {
+            padding-top: 1.5rem !important;
+            padding-bottom: 1rem !important;
         }
 
-        /* تأثير الطفو عند اللمس */
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            transform: translateY(-8px) !important;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+        /* --- 4. THE CARD FIX (TARGETS MULTIPLE SELECTORS) --- */
+        /* نستهدف الاسم الرسمي + أي عنصر له كلاس يحتوي على BorderWrapper */
+        div[data-testid="stVerticalBlockBorderWrapper"], 
+        div[class*="stVerticalBlockBorderWrapper"] {
+            background-color: #FFFFFF !important; /* أبيض صريح */
+            border: 1px solid #dee2e6 !important;
+            border-radius: 15px !important;
+            padding: 20px !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+            border-left: 6px solid #0277BD !important; /* الخط الأزرق */
+            transition: transform 0.2s, box-shadow 0.2s !important;
+        }
+
+        /* Hover Effect */
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover,
+        div[class*="stVerticalBlockBorderWrapper"]:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
             border-color: #0277BD !important;
         }
         
-        /* Buttons */
+        /* 5. Buttons Styling */
         div.stButton > button {
-            background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
+            background: #0277BD !important;
             color: white !important;
-            border-radius: 10px;
-            border: none;
-            padding: 10px 20px;
-            font-weight: bold;
+            border-radius: 8px !important;
+            border: none !important;
             width: 100%;
-            margin-top: 10px;
+            padding: 10px;
+            font-weight: 600;
         }
         div.stButton > button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
+            background: #01579B !important;
+            box-shadow: 0 4px 10px rgba(2, 119, 189, 0.3) !important;
         }
         
-        h1, h2, h3 { color: #01579B !important; font-weight: 800; text-align: center;}
-        p { color: #424242 !important; font-weight: 500; text-align: center; }
-        div[data-testid="stImage"] { display: block; margin-left: auto; margin-right: auto; }
-        div[data-testid="stImage"] > img { display: block; margin-left: auto; margin-right: auto; }
+        /* 6. Text & Images */
+        h1, h2, h3 { color: #01579B !important; text-align: center; }
+        p { color: #424242 !important; text-align: center; font-size: 15px; }
+        
+        div[data-testid="stImage"] { display: flex; justify-content: center; }
+        div[data-testid="stImage"] > img { width: 60px !important; }
         </style>
     """, unsafe_allow_html=True)
 
