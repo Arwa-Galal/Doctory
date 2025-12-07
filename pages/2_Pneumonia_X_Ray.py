@@ -6,11 +6,10 @@ from utils import load_css, load_all_models, process_image, ask_medbot, MEDICAL_
 # --- 1. Page Config ---
 st.set_page_config(page_title="Pneumonia Check", page_icon="🫁", layout="wide")
 load_css() # Loads the Blue/White Theme
-
+render_sidebar("Pneumonia")
 # --- 2. Navigation ---
 # Note: Ensure your main file is named 'app.py'. If it is 'streamlit_app.py', keep your change.
-if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("streamlit_app.py") 
+
 
 # --- 3. Load Models ---
 MODELS = load_all_models()
