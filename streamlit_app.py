@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import load_css, render_sidebar
+from utils import load_css, render_sidebar,load_all_models, MODELS
 
 st.set_page_config(page_title="Doctory", page_icon="🩺", layout="wide")
 load_css()
@@ -17,10 +17,10 @@ st.write("") # Spacer
 st.markdown("<h3 style='text-align: center;'>Choose a Service</h3>", unsafe_allow_html=True)
 st.write("") 
 
-# --- SERVICE CARDS (Using Border Containers) ---
+# --- SERVICE CARDS ---
 
-# Row 1
-col1, col2, col3 = st.columns(3)
+# Row 1: Chat and Diabetes
+col1, col2 = st.columns(2)
 
 with col1:
     with st.container(border=True):
@@ -28,7 +28,7 @@ with col1:
         st.markdown("<h3>AI Doctor</h3>", unsafe_allow_html=True)
         st.markdown("<p>Chat with our smart assistant.</p>", unsafe_allow_html=True)
         if st.button("Start Chat"):
-            st.switch_page("pages/1_💬_Chat_With_Doctory.py")
+            st.switch_page("pages/1_AI_Chatbot.py")
 
 with col2:
     with st.container(border=True):
@@ -36,7 +36,10 @@ with col2:
         st.markdown("<h3>Diabetes</h3>", unsafe_allow_html=True)
         st.markdown("<p>Check risk based on vitals.</p>", unsafe_allow_html=True)
         if st.button("Check Risk"):
-            st.switch_page("pages/2_🩸_Diabetes_Test.py")
+            st.switch_page("pages/4_Diabetes_Risk.py")
+
+# Row 2: Pneumonia and Malaria
+col3, col4 = st.columns(2)
 
 with col3:
     with st.container(border=True):
@@ -44,26 +47,12 @@ with col3:
         st.markdown("<h3>Pneumonia</h3>", unsafe_allow_html=True)
         st.markdown("<p>Analyze Chest X-Ray images.</p>", unsafe_allow_html=True)
         if st.button("Check Lungs"):
-            st.switch_page("pages/3_🫁_Pneumonia_Check.py")
-
-# Row 2
-col4, col5, col6 = st.columns(3)
+            st.switch_page("pages/2_Pneumonia_X_Ray.py")
 
 with col4:
-    with st.container(border=True):
-        st.image("https://cdn-icons-png.flaticon.com/512/833/833472.png", width=60)
-        st.markdown("<h3>Heart</h3>", unsafe_allow_html=True)
-        st.markdown("<p>Assess cardiovascular risk.</p>", unsafe_allow_html=True)
-        if st.button("Check Heart"):
-            st.switch_page("pages/5_❤️_Heart_Risk.py")
-
-with col5:
     with st.container(border=True):
         st.image("https://cdn-icons-png.flaticon.com/512/883/883407.png", width=60)
         st.markdown("<h3>Malaria</h3>", unsafe_allow_html=True)
         st.markdown("<p>Analyze cell images.</p>", unsafe_allow_html=True)
         if st.button("Check Cells"):
-            st.switch_page("pages/4_🦟_Malaria_Check.py")
-
-with col6:
-    st.write("") # Empty column
+            st.switch_page("pages/3_Malaria_Blood_Smear.py")
