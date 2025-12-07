@@ -44,11 +44,11 @@ def load_css():
 
 /* تنسيق الكارت الجديد (أبيض ويطير) */
         [data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #ffffff !important; /* لون أبيض صريح */
+            background-color: #f2f2ff !important; /* لون أبيض صريح */
             border-radius: 20px !important;
             border: 1px solid #e0e0e0 !important;
             border-left: 8px solid #0277BD !important;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
+            box-shadow: 0 5px 15px rgba(0,0,4,0.08) !important;
             padding: 25px !important;
             /* كود الحركة الناعمة (Bounce effect) */
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
