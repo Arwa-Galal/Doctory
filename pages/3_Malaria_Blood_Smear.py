@@ -32,11 +32,11 @@ def process_malaria_image(image_bytes):
 
 # --- 5. Input Section (Medical Blue Card) ---
 st.markdown('<div class="css-card">', unsafe_allow_html=True)
- col1,col2 = st.columns([1,2])
+col2 = st.columns([1])
 
-with col1:
-    st.info("Supported formats: JPEG, PNG")
-    st.caption("Please upload a cropped image of a single cell.")
+#with col1:
+   # st.info("Supported formats: JPEG, PNG")
+   # st.caption("Please upload a cropped image of a single cell.")
     
 with col2:
     uploaded_file = st.file_uploader("Upload Cell Image", type=["jpg", "png", "jpeg"])
