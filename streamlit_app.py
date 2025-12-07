@@ -29,7 +29,7 @@ st.markdown("""
     if st.button("Start Chat"):
         # تأكدي أن اسم الملف في فولدر pages هو 1_💬_Chat_With_Doctory.py
         st.switch_page("pages/1_AI_Chatbot.py")
-    st.markdown('</div>', unsafe_allow_html=True)
+   # st.markdown('</div>', unsafe_allow_html=True)
 
 with c2:
     st.markdown('<div class="css-card">', unsafe_allow_html=True)
