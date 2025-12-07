@@ -1,12 +1,10 @@
 import streamlit as st
-from utils import load_css, load_all_models, prepare_diabetes_features, calculate_bmi, ask_medbot, MEDICAL_PROMPT
+from utils import load_css, load_all_models, prepare_diabetes_features, calculate_bmi, ask_medbot, MEDICAL_PROMPT, render_sidebar
 
 st.set_page_config(page_title="Diabetes", page_icon="🩸", layout="wide")
 load_css()
 MODELS = load_all_models()
-
-if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("streamlit_app.py")
+render_sidebar('Diabetes")
 
 st.title("🩸 Diabetes Risk Assessment")
 
