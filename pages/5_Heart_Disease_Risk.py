@@ -1,15 +1,12 @@
 import streamlit as st
 import pandas as pd
 # Import helpers from our central utils file
-from utils import load_css, load_all_models, ask_medbot, MEDICAL_PROMPT
+from utils import load_css, load_all_models, ask_medbot, MEDICAL_PROMPT, render_sidebar
 
 # --- 1. Page Config & Theme ---
 st.set_page_config(page_title="Heart Risk", page_icon="❤️", layout="wide")
 load_css() # Apply the Medical Blue Theme
-
-# --- 2. Navigation ---
-if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("streamlit_app.py") # Corrected file name
+render_sidebar("Heart Risk")
 
 # --- 3. Load Models ---
 MODELS = load_all_models()
