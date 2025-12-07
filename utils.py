@@ -29,68 +29,75 @@ def load_css():
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
+        /* 1. Background */
         .stApp {
             background: linear-gradient(135deg, #bbdefb 0%, #90caf9 50%, #64b5f6 100%);
             background-attachment: fixed;
         }
-        
+
+        /* 2. Remove Extra Spacing at Top */
         .block-container {
             padding-top: 2rem !important;
             padding-bottom: 2rem !important;
+            max-width: 95% !important;
         }
 
+        /* 3. Hide Default Elements */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         div[data-testid="stSidebarNav"] {display: none;}
 
-        /* تنسيق الكارت */
-        .css-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 15px; /* مسافة صغيرة بين الكارت والزر */
-            border-left: 8px solid #0277BD;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center; /* توسيط المحتوى */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* --- 4. THE MAGIC CARD STYLING --- */
+        /* نستهدف الحاوية ذات الإطار (Border Container) ونحولها لكارت */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 20px !important;
+            border: 1px solid rgba(13, 71, 161, 0.1) !important;
+            border-left: 8px solid #0277BD !important; /* الخط الأزرق الجانبي */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+            padding: 20px !important;
+        }
+
+        /* تأثير الحركة عند المرور (Hover) */
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            transform: translateY(-8px) !important; /* يرفع الكارت لأعلى */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+            border-color: #0277BD !important;
         }
         
-        .css-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
-        /* تنسيق الصور داخل الكارت */
-        .css-card img {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: 60px;
-            margin-bottom: 15px;
-        }
-
-        /* تنسيق النصوص داخل الكارت */
-        .css-card h3 { color: #01579B; margin: 0; font-size: 1.3rem; font-weight: 800; }
-        .css-card p { color: #555; margin: 5px 0 0 0; font-size: 0.9rem; }
-
-        /* الأزرار */
+        /* 5. Buttons */
         div.stButton > button {
             background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
             color: white !important;
-            border-radius: 12px;
+            border-radius: 10px;
             border: none;
             padding: 10px;
             font-weight: bold;
             width: 100%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
         div.stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(2, 119, 189, 0.3);
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4);
         }
         
-        h1, h2 { color: #01579B !important; font-weight: 800; text-align: center;}
+        /* 6. Titles & Text Center */
+        h1, h2, h3 { color: #01579B !important; font-weight: 800; text-align: center;}
+        p { color: #0277BD !important; font-weight: 500; text-align: center; }
+        
+        /* Center Images in the App */
+        div[data-testid="stImage"] {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        div[data-testid="stImage"] > img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
         </style>
     """, unsafe_allow_html=True)
 # --- 3. CUSTOM SIDEBAR NAVIGATION (THE BLUE MENU) ---
