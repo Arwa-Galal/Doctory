@@ -20,74 +20,73 @@ Answer questions clearly and empathetically.
 ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
-# --- CSS STYLING (THE WHITE CARD THEME) ---
-# --- CSS STYLING (Universal Fix) ---
+# --- CSS STYLING (THE POWERFUL FIX) ---
 def load_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
-        /* 1. FORCE Background Color (عشان الأبيض يبان) */
+        /* 1. خلفية زرقاء فاتحة لكامل التطبيق */
         .stApp {
-            background: linear-gradient(135deg, #0277BD 5%, #BBDEFB 100%) !important;
-            background-attachment: fixed !important;
+            background: linear-gradient(135deg, #E3F2FD 5%, #BBDEFB 100%) !important;
+            background-attachment: fixed;
         }
 
-        /* 2. Hide Default Elements */
+        /* 2. إخفاء القوائم الافتراضية */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         div[data-testid="stSidebarNav"] {display: none;}
-        
-        /* 3. Fix Spacing */
-        .block-container {
-            padding-top: 1.5rem !important;
-            padding-bottom: 1rem !important;
-        }
+        .block-container { padding-top: 2rem !important; }
 
-        /* --- 4. THE CARD FIX (TARGETS MULTIPLE SELECTORS) --- */
-        /* نستهدف الاسم الرسمي + أي عنصر له كلاس يحتوي على BorderWrapper */
-        div[data-testid="stVerticalBlockBorderWrapper"], 
-        div[class*="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF !important; /* أبيض صريح */
-            border: 1px solid #dee2e6 !important;
+        /* --- 3. تصميم الكارت (الجزء المهم) --- */
+        /* نستهدف أي حاوية (Container) لها إطار */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #FFFFFF !important; /* يجبر الخلفية تكون بيضاء */
+            border: 1px solid #CCCCCC !important; /* حدود رمادية */
+            border-left: 8px solid #0277BD !important; /* الخط الأزرق السميك */
             border-radius: 15px !important;
             padding: 20px !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
-            border-left: 6px solid #0277BD !important; /* الخط الأزرق */
-            transition: transform 0.2s, box-shadow 0.2s !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+            transition: all 0.3s ease-in-out !important; /* نعومة الحركة */
         }
 
-        /* Hover Effect */
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover,
-        div[class*="stVerticalBlockBorderWrapper"]:hover {
-            transform: translateY(-5px) !important;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-            border-color: #0277BD !important;
+        /* عند مرور الماوس (Hover) */
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            transform: translateY(-10px) !important; /* يرفع الكارت لأعلى */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important; /* ظل كبير */
+            border-color: #0277BD !important; /* يجعل الحدود زرقاء */
         }
-        
-        /* 5. Buttons Styling */
+
+        /* 4. إجبار النصوص داخل الكارت أن تكون ملونة */
+        [data-testid="stVerticalBlockBorderWrapper"] h1, 
+        [data-testid="stVerticalBlockBorderWrapper"] h2, 
+        [data-testid="stVerticalBlockBorderWrapper"] h3 {
+            color: #01579B !important;
+        }
+        [data-testid="stVerticalBlockBorderWrapper"] p {
+            color: #424242 !important;
+        }
+
+        /* 5. تصميم الأزرار */
         div.stButton > button {
-            background: #0277BD !important;
+            background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
             color: white !important;
-            border-radius: 8px !important;
             border: none !important;
-            width: 100%;
-            padding: 10px;
-            font-weight: 600;
+            border-radius: 8px !important;
+            padding: 10px 20px !important;
+            width: 100% !important;
+            font-weight: bold !important;
         }
         div.stButton > button:hover {
-            background: #01579B !important;
-            box-shadow: 0 4px 10px rgba(2, 119, 189, 0.3) !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4) !important;
         }
         
-        /* 6. Text & Images */
-        h1, h2, h3 { color: #01579B !important; text-align: center; }
-        p { color: #424242 !important; text-align: center; font-size: 15px; }
-        
+        /* 6. توسيط الصور */
         div[data-testid="stImage"] { display: flex; justify-content: center; }
-        div[data-testid="stImage"] > img { width: 60px !important; }
+        div[data-testid="stImage"] > img { width: 80px !important; }
         </style>
     """, unsafe_allow_html=True)
 
