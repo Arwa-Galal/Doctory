@@ -3,12 +3,10 @@ from utils import ask_medbot, load_css, MEDICAL_PROMPT
 
 st.set_page_config(page_title="Chat", page_icon="💬", layout="wide")
 load_css()
-
+render_sidebar("AI Chat")
 # Sidebar Navigation (Back to Home)
-if st.sidebar.button("🏠 Back to Home"):
-    st.switch_page("streamlit_app.py")
 
-st.title("💬 Chat with Doctory")
+st.title(" Chat with Doctory")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "Hello! I am Doctory. How can I help you?"}]
