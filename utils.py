@@ -11,7 +11,7 @@ import os
 from streamlit_option_menu import option_menu 
 
 # --- CONFIGURATION ---
-API_KEY = "AIzaSyAtfaIb8FqmNvU4-27p6fE_Dgzla5dNf1s"
+API_KEY = "AIzaSyBrpq8IqQ01Cj2NMsoSp6va1g6kpRsxzz0"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={API_KEY}"
 
 MEDICAL_PROMPT = """
