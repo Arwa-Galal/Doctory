@@ -114,6 +114,7 @@ def load_css():
 /* Assistant messages */
 [data-testid="stChatMessage"][data-testid*="assistant"] {
     font-size: 22px !important;
+    color: #0277BD;
 }
         </style>
     """, unsafe_allow_html=True)
