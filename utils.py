@@ -12,7 +12,7 @@ from streamlit_option_menu import option_menu
 
 # --- CONFIGURATION ---
 # Replace with your actual API Key
-API_KEY = "AIzaSyAg-7Wu_mCF-z9P-KEbkjpQEb7B3PB_hxo"
+API_KEY = "AIzaSyBTQVAl0mB_OU7Owgo2fzsopMRekgeR2Jc"
 
 MEDICAL_PROMPT = """
 You are MedBot, a professional medical AI assistant. 
