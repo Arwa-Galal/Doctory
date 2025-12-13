@@ -11,7 +11,7 @@ import os
 from streamlit_option_menu import option_menu 
 
 # --- CONFIGURATION ---
-API_KEY = "AIzaSyBxYCfAwsyhbhiA8EQd6dcn-RdsZQ9xtZ8"
+API_KEY = "AIzaSyAg-7Wu_mCF-z9P-KEbkjpQEb7B3PB_hxo"
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 MEDICAL_PROMPT = "You are MedBot, a professional medical AI assistant. Answer clearly. Always disclaim you are an AI."
