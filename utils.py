@@ -10,9 +10,12 @@ import io
 import os
 from streamlit_option_menu import option_menu 
 
-# --- CONFIGURATION ---
-API_KEY = "AIzaSyD6Aq95EGOb7btEcz2OEr5_dZ8U4GbfQhw"
-API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={API_KEY}"
+# ---# --- CONFIGURATION ---
+# ⚠️ IMPORTANT: Replace with your actual Google AI Studio API Key
+API_KEY = "AIzaSyBxYCfAwsyhbhiA8EQd6dcn-RdsZQ9xtZ8" 
+
+# ✅ CORRECTED URL (Using gemini-1.5-flash)
+API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
 
 MEDICAL_PROMPT = """
 You are MedBot, a professional medical AI assistant. 
