@@ -7,7 +7,7 @@ import onnxruntime as ort
 from PIL import Image
 import io
 import os
-import google.generativeai as genai  # OFFICIAL GOOGLE LIBRARY
+import google.generativeai as genai 
 from streamlit_option_menu import option_menu 
 
 # --- CONFIGURATION ---
@@ -20,7 +20,7 @@ Answer questions clearly and empathetically.
 ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
-# --- CSS STYLING (WHITE CARD THEME) ---
+# --- CSS STYLING ---
 def load_css():
     st.markdown("""
         <style>
@@ -108,7 +108,7 @@ def render_sidebar(current_page):
             if selected == "Diabetes": st.switch_page("pages/4_Diabetes_Risk.py")
             if selected == "Heart Risk": st.switch_page("pages/5_Heart_Disease_Risk.py") 
 
-# --- MODEL LOADING (Lazy Loading to fix Memory) ---
+# --- MODEL LOADING (Lazy Loading) ---
 @st.cache_resource
 def get_model(model_type):
     MODEL_DIR = "models/"
@@ -128,27 +128,26 @@ def get_model(model_type):
     except Exception as e:
         return None
 
-# --- NEW AI FUNCTION (USING OFFICIAL SDK) ---
+# --- ROBUST AI FUNCTION (AUTO-FALLBACK) ---
 def ask_medbot(user_query, system_prompt):
     if not API_KEY: return "⚠️ API Key missing."
     
-    try:
-        # Configure the official library
-        genai.configure(api_key=API_KEY)
-        
-        # Try the standard model first
-        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_prompt)
-        response = model.generate_content(user_query)
-        return response.text
-        
-    except Exception as e:
-        # Fallback if specific model fails
+    genai.configure(api_key=API_KEY)
+    
+    # List of models to try in order. If one fails, it tries the next.
+    models_to_try = ['gemini-1.5-flash', 'gemini-pro']
+    
+    for model_name in models_to_try:
         try:
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(system_prompt + "\n\nUser Question: " + user_query)
+            model = genai.GenerativeModel(model_name)
+            # Combine system prompt with user query because some models don't support system_instruction param directly in all versions
+            full_prompt = f"{system_prompt}\n\nUser: {user_query}"
+            response = model.generate_content(full_prompt)
             return response.text
-        except Exception as e2:
-            return f"AI Error: {e}"
+        except Exception:
+            continue # Try next model
+            
+    return "⚠️ AI Service Unavailable. Please check API Key or Quota."
 
 # --- HELPERS ---
 def process_image(image_bytes, target_size=(224, 224)):
@@ -165,5 +164,5 @@ def calculate_bmi(height, weight):
     return weight / ((height/100)**2) if height > 0 else 0
 
 def prepare_heart_features(data, scaler):
-    # (Keeping this simplified for brevity, ensure your scaler is passed correctly)
+    # (Simplified for brevity, ensure scaler is passed correctly)
     return None
