@@ -1,4 +1,5 @@
 import streamlit as st
+import requests
 import json
 import joblib
 import numpy as np
@@ -7,12 +8,11 @@ import onnxruntime as ort
 from PIL import Image
 import io
 import os
-import google.generativeai as genai 
 from streamlit_option_menu import option_menu 
 
 # --- CONFIGURATION ---
-# Replace with your actual API Key
 API_KEY = "AIzaSyBTQVAl0mB_OU7Owgo2fzsopMRekgeR2Jc"
+API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key={API_KEY}"
 
 MEDICAL_PROMPT = """
 You are MedBot, a professional medical AI assistant. 
@@ -20,62 +20,101 @@ Answer questions clearly and empathetically.
 ALWAYS end with a disclaimer that you are an AI, not a doctor.
 """
 
-# --- CSS STYLING ---
+# --- CSS STYLING (THE POWERFUL FIX) ---
 def load_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
         
+        /* 1. خلفية زرقاء فاتحة لكامل التطبيق */
         .stApp {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%) !important;
+            background: linear-gradient(135deg, #0277BD 5%, #BBDEFB 100%) !important;
             background-attachment: fixed;
         }
-        
-        .block-container { padding-top: 2rem !important; }
+
+        /* 2. إخفاء القوائم الافتراضية */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
+       /* header {visibility: hidden;}*/
         div[data-testid="stSidebarNav"] {display: none;}
+        .block-container { padding-top: 2rem !important; }
 
-        /* --- CARD STYLE --- */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF !important;
-            border: 1px solid #E0E0E0 !important;
-            border-radius: 16px !important;
+        /* --- 3. تصميم الكارت (الجزء المهم) --- */
+        /* نستهدف أي حاوية (Container) لها إطار */
+        /* --- 3. تصميم الكارت (الجزء المهم) --- */
+       [data-testid="stVerticalBlockBorderWrapper"],
+       [data-testid="stVerticalBlock"] > div[style*="border"],
+       div[class*="stContainer"] {
+            background-color: #FFFFFF !important; /* يجبر الخلفية تكون بيضاء */
+            border: 1px solid #CCCCCC !important; /* حدود رمادية */
+            border-left: 8px solid #0277BD !important; /* الخط الأزرق السميك */
+            border-radius: 15px !important;
             padding: 20px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05) !important;
-            border-top: 5px solid #0277BD !important;
-            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+            transition: all 0.3s ease-in-out !important; /* نعومة الحركة */
         }
 
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            transform: translateY(-8px) !important;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
-            border-top-color: #01579B !important;
+        /* عند مرور الماوس (Hover) */
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            transform: translateY(-10px) !important; /* يرفع الكارت لأعلى */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important; /* ظل كبير */
+            border-color: #0277BD !important; /* يجعل الحدود زرقاء */
         }
 
-        /* Text & Buttons */
-        h1, h2, h3, h4 { color: #01579B !important; }
-        p, label, li, span { color: #424242 !important; }
+        /* 4. إجبار النصوص داخل الكارت أن تكون ملونة */
+        [data-testid="stVerticalBlockBorderWrapper"] h1, 
+        [data-testid="stVerticalBlockBorderWrapper"] h2, 
+        [data-testid="stVerticalBlockBorderWrapper"] h3 {
+            color: #01579B !important;
+        }
+        [data-testid="stVerticalBlockBorderWrapper"] p {
+            color: #424242 !important;
+        }
 
+        /* 5. تصميم الأزرار */
         div.stButton > button {
-            background: #0277BD !important;
+            background: linear-gradient(135deg, #0277BD 0%, #01579B 100%) !important;
             color: white !important;
-            border-radius: 8px !important;
             border: none !important;
-            width: 100%;
-            padding: 10px;
-            font-weight: 600;
-            margin-top: 10px;
+            border-radius: 8px !important;
+            padding: 10px 20px !important;
+            width: 100% !important;
+            font-weight: bold !important;
         }
         div.stButton > button:hover {
-            background: #01579B !important;
-            box-shadow: 0 4px 12px rgba(2, 119, 189, 0.3) !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 5px 15px rgba(2, 119, 189, 0.4) !important;
         }
         
+        /* 6. توسيط الصور */
         div[data-testid="stImage"] { display: flex; justify-content: center; }
-        div[data-testid="stImage"] > img { width: 70px !important; object-fit: contain; }
+        div[data-testid="stImage"] > img { width: 80px !important; }
+        /* Chat Message Styling - Bigger Font */
+[data-testid="stChatMessage"] {
+    font-size: 22px !important; /* Increase from default ~14px */
+}
+
+/* Chat Input Box - Bigger Font */
+[data-testid="stChatInput"] textarea {
+    font-size: 18px !important;
+}
+
+/* Make chat message content more readable */
+[data-testid="stChatMessage"] p {
+    font-size: 22px !important;
+    line-height: 1.6 !important;
+}
+
+/* User messages */
+[data-testid="stChatMessage"][data-testid*="user"] {
+    font-size: 22px !important;
+}
+
+/* Assistant messages */
+[data-testid="stChatMessage"][data-testid*="assistant"] {
+    font-size: 22px !important;
+}
         </style>
     """, unsafe_allow_html=True)
 
@@ -106,50 +145,49 @@ def render_sidebar(current_page):
             if selected == "Pneumonia": st.switch_page("pages/2_Pneumonia_X_Ray.py")
             if selected == "Malaria": st.switch_page("pages/3_Malaria_Blood_Smear.py")
             if selected == "Diabetes": st.switch_page("pages/4_Diabetes_Risk.py")
-            if selected == "Heart Risk": st.switch_page("pages/5_Heart_Disease_Risk.py") 
+            if selected == "Heart Risk": st.switch_page("pages/5_Heart_Disease_Risk.py")
 
-# --- MODEL LOADING (Lazy Loading) ---
+# --- MODEL LOADING ---
 @st.cache_resource
-def get_model(model_type):
+def load_all_models():
     MODEL_DIR = "models/"
+    if not os.path.isdir(MODEL_DIR): return None
     try:
-        if model_type == "pneumonia":
-            return ort.InferenceSession(os.path.join(MODEL_DIR, "best.onnx"))
-        elif model_type == "malaria":
-            return ort.InferenceSession(os.path.join(MODEL_DIR, "malaria_model.onnx"))
-        elif model_type == "diabetes":
-            m = joblib.load(os.path.join(MODEL_DIR, "diabetes_model_package/diabetes_ensemble_model.joblib"))
-            s = joblib.load(os.path.join(MODEL_DIR, "diabetes_model_package/diabetes_scaler.joblib"))
-            return m, s
-        elif model_type == "heart":
-            m = joblib.load(os.path.join(MODEL_DIR, "HeartRisk_model_package/HeartRisk_model.joblib"))
-            s = joblib.load(os.path.join(MODEL_DIR, "HeartRisk_model_package/HeartRisk_scaler.joblib"))
-            return m, s
-    except Exception as e:
-        return None
-
-# --- ROBUST AI FUNCTION (AUTO-FALLBACK) ---
-def ask_medbot(user_query, system_prompt):
-    if not API_KEY: return "⚠️ API Key missing."
-    
-    genai.configure(api_key=API_KEY)
-    
-    # List of models to try in order. If one fails, it tries the next.
-    models_to_try = ['gemini-1.5-flash', 'gemini-pro']
-    
-    for model_name in models_to_try:
+        try: pneumonia = ort.InferenceSession(os.path.join(MODEL_DIR, "best.onnx"))
+        except: pneumonia = None
+        try: malaria = ort.InferenceSession(os.path.join(MODEL_DIR, "malaria_model.onnx"))
+        except: malaria = None
+        try: 
+            diabetes = joblib.load(os.path.join(MODEL_DIR, "diabetes_model_package/diabetes_ensemble_model.joblib"))
+            d_scaler = joblib.load(os.path.join(MODEL_DIR, "diabetes_model_package/diabetes_scaler.joblib"))
+        except: diabetes, d_scaler = None, None
         try:
-            model = genai.GenerativeModel(model_name)
-            # Combine system prompt with user query because some models don't support system_instruction param directly in all versions
-            full_prompt = f"{system_prompt}\n\nUser: {user_query}"
-            response = model.generate_content(full_prompt)
-            return response.text
-        except Exception:
-            continue # Try next model
-            
-    return "⚠️ AI Service Unavailable. Please check API Key or Quota."
+            heart = joblib.load(os.path.join(MODEL_DIR, "HeartRisk_model_package/HeartRisk_model.joblib"))
+            h_scaler = joblib.load(os.path.join(MODEL_DIR, "HeartRisk_model_package/HeartRisk_scaler.joblib"))
+        except: heart, h_scaler = None, None
+        
+        return {
+            "pneumonia_sess": pneumonia, "malaria_sess": malaria,
+            "diabetes_model": diabetes, "diabetes_scaler": d_scaler,
+            "heart_model": heart, "heart_scaler": h_scaler,
+            "pneu_in": pneumonia.get_inputs()[0].name if pneumonia else None,
+            "pneu_out": pneumonia.get_outputs()[0].name if pneumonia else None,
+            "mal_in": malaria.get_inputs()[0].name if malaria else None,
+            "mal_out": malaria.get_outputs()[0].name if malaria else None
+        }
+    except Exception: return None
+
+MODELS = load_all_models()
 
 # --- HELPERS ---
+def ask_medbot(user_query, system_prompt):
+    if not API_KEY: return "⚠️ API Key missing."
+    try:
+        payload = {"contents": [{"parts": [{"text": user_query}]}], "systemInstruction": {"parts": [{"text": system_prompt}]}}
+        response = requests.post(API_URL, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
+        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except: return "Connection Error"
+
 def process_image(image_bytes, target_size=(224, 224)):
     img = Image.open(io.BytesIO(image_bytes)).convert('RGB').resize(target_size)
     img_np = np.array(img).astype(np.float32) / 255.0
@@ -163,6 +201,39 @@ def prepare_diabetes_features(data, scaler):
 def calculate_bmi(height, weight):
     return weight / ((height/100)**2) if height > 0 else 0
 
-def prepare_heart_features(data, scaler):
-    # (Simplified for brevity, ensure scaler is passed correctly)
-    return None
+def prepare_heart_features(data):
+    scaler = MODELS['heart_scaler']
+    bmi = calculate_bmi(data['Height'], data['Weight'])
+    map_gen = {'Excellent':0,'Fair':1,'Good':2,'Poor':3,'Very Good':4}
+    map_check = {'More than 5 years':0,'Never':1,'Past 1 year':2,'Past 2 years':3,'Past 5 years':4}
+    map_diab = {'No':0,'No Pre Diabetes':1,'Only during pregnancy':2,'Yes':3}
+    map_age = {'Adult':0,'Elderly':1,'Mid-Aged':2,'Senior-Adult':3,'Young':4}
+    age = data['Age']
+    if 18<=age<=24: ac='Young'
+    elif 25<=age<=39: ac='Adult'
+    elif 40<=age<=54: ac='Mid-Aged'
+    elif 55<=age<=64: ac='Senior-Adult'
+    else: ac='Elderly'
+    try: bmi_grp = pd.cut([bmi], bins=[0, 18.5, 25, 30, 35, 100], labels=['Underweight','Normal weight','Overweight','Obese I','Obese II'])[0]
+    except: bmi_grp = 'Normal weight'
+    map_bmi = {'Normal weight':0,'Obese I':1,'Obese II':2,'Overweight':3,'Underweight':4}
+    f_dict = {
+        'general_health': map_gen.get(data['General_Health']),
+        'checkup': map_check.get(data['Checkup']),
+        'exercise': 1 if data['Exercise']=='Yes' else 0,
+        'skin_cancer': 1 if data['Skin_Cancer']=='Yes' else 0,
+        'other_cancer': 1 if data['Other_Cancer']=='Yes' else 0,
+        'depression': 1 if data['Depression']=='Yes' else 0,
+        'diabetes': map_diab.get(data['Diabetes']),
+        'arthritis': 1 if data['Arthritis']=='Yes' else 0,
+        'age_category': map_age.get(ac),
+        'height': data['Height'], 'weight': data['Weight'], 'bmi': bmi,
+        'bmi_group': map_bmi.get(bmi_grp, 0),
+        'alcohol_consumption': 0, 'fruit_consumption': 0, 'vegetables_consumption': 0, 'potato_consumption': 0,
+        'sex_Female': 1 if data['Sex']=='Female' else 0,
+        'sex_Male': 1 if data['Sex']=='Male' else 0,
+        'smoking_history_No': 1 if data['Smoking_History']=='Never' else 0,
+        'smoking_history_Yes': 1 if data['Smoking_History']!='Never' else 0
+    }
+    cols = ['general_health', 'checkup', 'exercise', 'skin_cancer', 'other_cancer', 'depression', 'diabetes', 'arthritis', 'age_category', 'height', 'weight', 'bmi', 'alcohol_consumption', 'fruit_consumption', 'vegetables_consumption', 'potato_consumption', 'bmi_group', 'sex_Female', 'sex_Male', 'smoking_history_No', 'smoking_history_Yes']
+    return scaler.transform(pd.DataFrame([f_dict], columns=cols))
